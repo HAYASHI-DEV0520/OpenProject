@@ -81,7 +81,7 @@ async function loadStations() {
   selectedAlightingStation = null;
 
   renderStepControls(destination);
-  showRouteInfo(destination);
+  //showRouteInfo(destination);
   debugEl.textContent = JSON.stringify({ currentStations, destination }, null, 2);
 }
 
@@ -170,7 +170,7 @@ async function confirmRide(destination) {
     <p>乗車列車: ${selectedTrain}</p>
     <p>乗車時間: ${boardingTime}</p>
     <p>降車駅: ${selectedAlightingStation}</p>
-    <p>推定降車時間: ${alightingTime}</p>
+    <h1>推定降車時間: ${alightingTime}</h1>
   `;
 }
 
