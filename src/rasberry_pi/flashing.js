@@ -10,7 +10,7 @@ const NEOPIXEL_COUNT = 7; // LEDの個数
 // 状態管理  
 let isStarted = false; // 光りだしたかどうか  
 let isLit = false; // 現在光っているかどうか  
-let npix; // Neopixelインスタンス  
+let npix; // Neopixelインスタンス 
   
 main();  
   
@@ -36,7 +36,7 @@ async function handleButtonPress(ev) {
   
   if (!isStarted) {  
     // 光りだす前は何もしない  
-    console.log("まだ開始されていません");  
+    console.log("開始フラグが経ちましたボタンを押してください。"); 
     return;  
   }  
   
