@@ -4,7 +4,7 @@ import NPIX from "@chirimen/neopixel-i2c";
 const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));  
   
 // 設定（外部から読み込む想定）  
-const DELAY_SECONDS = 3; // 指定された秒数  
+const DELAY_SECONDS = 30000; // 指定された秒数  
 const NEOPIXEL_COUNT = 7; // LEDの個数  
   
 // 状態管理  
