@@ -1,0 +1,23 @@
+{
+  "name": "timetable-reader",
+  "version": "1.0.0",
+  "description": "東京都営地下鉄のダイヤデータを効率的に管理・クエリするNode.jsサービス",
+  "main": "timetableService.js",
+  "scripts": {
+    "start": "node example.js",
+    "serve": "node server.js",
+    "test": "node example.js"
+  },
+  "keywords": [
+    "timetable",
+    "transit",
+    "train",
+    "tokyo",
+    "toei"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}
