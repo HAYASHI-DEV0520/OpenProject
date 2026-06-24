@@ -209,8 +209,10 @@ class TimetableService {
       return [];
     }
 
-    // 最初のtimetableの停車駅を取得
-    const firstTimetable = timetables[0];
+    // 停車駅の数が最も多いtimetableを取得
+    const firstTimetable = timetables.reduce((max, current) => 
+      current['odpt:trainTimetableObject'].length > max['odpt:trainTimetableObject'].length ? current : max
+    );
     const stops = firstTimetable['odpt:trainTimetableObject'];
     const stations = [];
 
