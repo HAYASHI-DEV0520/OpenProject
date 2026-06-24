@@ -153,7 +153,8 @@ class TimetableService {
 
   // 線路のリストを取得
   getRailways() {
-    return this.indexedData.railways;
+    // 荒川線のみを返す
+    return this.indexedData.railways.filter(r => r === 'odpt.Railway:Toei.Arakawa');
   }
 
   // 線路のカレンダータイプのリストを取得
