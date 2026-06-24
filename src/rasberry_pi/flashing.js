@@ -1,20 +1,4 @@
-import { requestI2CAccess } from "./node_modules/node-web-i2c/index.js";  
-import { requestGPIOAccess } from "./node_modules/node-web-gpio/dist/index.js";  
-import NPIX from "@chirimen/neopixel-i2c";  
-const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));  
-  
-// 設定（外部から読み込む想定）  
-const DELAY_SECONDS = 30000; // 指定された秒数  
-const NEOPIXEL_COUNT = 7; // LEDの個数  
-  
-// 状態管理  
-let isStarted = false; // 光りだしたかどうか  
-let isLit = false; // 現在光っているかどうか  
-let npix; // Neopixelインスタンス 
-  
-main();  
-  
-async function main() {  
+  async function main() {  
   // I2C初期化（Neopixel用）  
   const i2cAccess = await requestI2CAccess();  
   const port = i2cAccess.ports.get(1);  
@@ -27,27 +11,26 @@ async function main() {
   await buttonPort.export("in");  
   buttonPort.onchange = handleButtonPress;  
   
-  console.log("初期化完了。ボタンを押して開始してください。");  
+  console.log("初期化完了。ボタンを押してください。");  
 }  
   
 async function handleButtonPress(ev) {  
   // ボタン押下時（ev.value == 0）のみ処理  
   if (ev.value !== 0) return;  
   
-  if (!isStarted) {  
-    // 光りだす前は何もしない  
-    console.log("開始フラグが経ちましたボタンを押してください。"); 
+  // タイマー動作中はボタン無効  
+  if (isTimerRunning) {  
+    console.log("タイマー動作中です。ボタンは無効です。");  
     return;  
   }  
   
   if (isLit) {  
-    // 光っている状態でボタンを押したら消灯  
+    // 常時点灯中にボタンを押したら消灯  
     await npix.setGlobal(0, 0, 0);  
     isLit = false;  
     console.log("消灯しました");  
   } else {  
-    // 光っていない状態でボタンを押したら点灯処理開始  
-    isLit = true;  
+    // 待機状態でボタンを押したら点灯処理開始  
     console.log("点灯処理開始");  
       
     // 即時0.5秒光る  
@@ -55,18 +38,15 @@ async function handleButtonPress(ev) {
     await sleep(500);  
     await npix.setGlobal(0, 0, 0); // 一旦消灯  
       
-    // 指定秒数待機  
-    console.log(`${DELAY_SECONDS}秒待機中...`);  
+    // タイマー開始  
+    isTimerRunning = true;  
+    console.log(`${DELAY_SECONDS}秒待機中...（ボタン無効）`);  
     await sleep(DELAY_SECONDS * 1000);  
+    isTimerRunning = false;  
       
     // ずっと光る  
     await npix.setGlobal(100, 0, 0); // 赤色で常時点灯  
+    isLit = true;  
     console.log("常時点灯開始");  
   }  
-}  
-  
-// 外部から開始をトリガーする関数  
-function startLighting() {  
-  isStarted = true;  
-  console.log("開始フラグが立ちました。ボタンで操作できます。");  
 }
