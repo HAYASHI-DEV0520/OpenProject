@@ -100,7 +100,12 @@ async function handleApiRequest(url, res) {
         );
         break;
       case '/api/trains':
-        result = timetable.getTrainsArrivingAtStation(searchParams.get('station'));
+        result = timetable.getTrainsArrivingAtStation(
+          searchParams.get('station'),
+          searchParams.get('railway'),
+          searchParams.get('calendar'),
+          searchParams.get('direction')
+        );
         break;
       case '/api/train':
         result = timetable.getTrainTimetable(searchParams.get('trainNumber'));

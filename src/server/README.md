@@ -1,3 +1,5 @@
+これはtimetableService.jsに関する説明です。例としてサーバーを作りましたが、起動する場合はこのファイルのディレクトリーに移動し、npm run serveを実行してください。
+
 # Timetable Service
 
 東京都営地下鉄のダイヤデータを効率的に管理・クエリするNode.jsサービスです。

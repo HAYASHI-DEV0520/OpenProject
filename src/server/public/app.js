@@ -131,7 +131,11 @@ async function loadTrainsForBoardingStation() {
     return;
   }
 
-  const trains = await fetchJson(`${api.trains}?station=${encodeURIComponent(selectedBoardingStation)}`);
+  const railway = railwayEl.value;
+  const calendar = calendarEl.value;
+  const direction = directionEl.value;
+  
+  const trains = await fetchJson(`${api.trains}?station=${encodeURIComponent(selectedBoardingStation)}&railway=${encodeURIComponent(railway)}&calendar=${encodeURIComponent(calendar)}&direction=${encodeURIComponent(direction)}`);
   const options = ['<option value="">列車を選択</option>', ...trains.map(t => `<option value="${t.trainNumber}">${t.arrivalTime} - ${t.trainNumber}</option>`)];
   trainSelect.innerHTML = options.join('');
 

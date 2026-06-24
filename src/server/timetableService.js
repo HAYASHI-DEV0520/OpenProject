@@ -227,14 +227,26 @@ class TimetableService {
   }
 
   // 特定の駅に到着する列車のリスト（到着時間でソート）
-  getTrainsArrivingAtStation(station) {
+  getTrainsArrivingAtStation(station, railway = null, calendar = null, direction = null) {
     if (!this.indexedData.stationMap[station]) {
       console.warn(`Station not found: ${station}`);
       return [];
     }
 
-    return this.indexedData.stationMap[station]
-      .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+    let trains = this.indexedData.stationMap[station];
+    
+    // 条件でフィルタリング
+    if (railway) {
+      trains = trains.filter(t => t.railway === railway);
+    }
+    if (calendar) {
+      trains = trains.filter(t => t.calendar === calendar);
+    }
+    if (direction) {
+      trains = trains.filter(t => t.direction === direction);
+    }
+    
+    return trains.sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
   }
 
   // 特定の列車が特定の駅に到着する時間を取得
