@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toei Timetable Explorer</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f5f7fb; color: #1f2937; }
+    header { background: #003366; color: #fff; padding: 1rem; }
+    main { padding: 1rem; max-width: 980px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 1rem; }
+    .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 1rem; margin-bottom: 1rem; }
+    label { display: block; margin: 0.75rem 0 0.25rem; }
+    select, button { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+    button { margin-top: 1rem; background: #0a61d6; color: #fff; border: none; cursor: pointer; }
+    button:disabled { background: #a5b4fc; cursor: not-allowed; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    .row { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Toei Timetable Explorer</h1>
+  </header>
+  <main>
+    <div class="card">
+      <h2>データソース</h2>
+      <p>ODPT API から都営地下鉄のダイヤを取得します。</p>
+      <p id="status"></p>
+    </div>
+
+    <div class="card row">
+      <div>
+        <label for="railway">線路</label>
+        <select id="railway"></select>
+      </div>
+      <div>
+        <label for="calendar">カレンダー</label>
+        <select id="calendar"></select>
+      </div>
+      <div>
+        <label for="direction">方向</label>
+        <select id="direction"></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <button id="loadStations">停車駅と列車を読み込む</button>
+      <div id="stepControls"></div>
+      <div id="result"></div>
+    </div>
+
+    <div class="card">
+      <h2>デバッグ情報</h2>
+      <pre id="debug" style="display:none"></pre>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
