@@ -4,7 +4,7 @@
   "description": "東京都営地下鉄のダイヤデータを効率的に管理・クエリするNode.jsサービス",
   "main": "timetableService.js",
   "scripts": {
-    "start": "node example.js",
+    "start": "node server.js",
     "serve": "node server.js",
     "test": "node example.js"
   },
