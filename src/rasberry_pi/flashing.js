@@ -77,3 +77,4 @@ async function handleShortPress() {
     console.log("タイマー動作中です。短押しは無効です。");  
     return;  
   }  
+}
