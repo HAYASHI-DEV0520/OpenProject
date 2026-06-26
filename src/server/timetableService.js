@@ -26,7 +26,11 @@ class TimetableService {
   }
 
   static getDefaultApiUrls() {
-    const consumerKey = process.env.ODPT_CONSUMER_KEY || DEFAULT_CONSUMER_KEY;
+    const consumerKey = process.env.ODPT_CONSUMER_KEY;
+    if (!consumerKey) {
+      throw new Error('Missing required env var: ODPT_CONSUMER_KEY');
+    }
+
     return DEFAULT_RAILWAYS.map(
       (railwayId) => `${TIMETABLE_API_BASE}?acl:consumerKey=${encodeURIComponent(consumerKey)}&odpt:railway=${encodeURIComponent(railwayId)}`
     );
