@@ -16,6 +16,14 @@
     button:disabled { background: #a5b4fc; cursor: not-allowed; }
     pre { white-space: pre-wrap; word-break: break-word; }
     .row { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+    .status-panel { margin-top: 1rem; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+    .status-panel summary { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.75rem 0.875rem; cursor: pointer; font-size: 0.875rem; color: #475569; user-select: none; }
+    .status-panel summary:hover { background: #f8fafc; }
+    .status-label { flex: 0 0 auto; font-weight: 700; color: #334155; }
+    .status-latest { color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .status-log { max-height: 160px; overflow: auto; border-top: 1px solid #e2e8f0; background: #f8fafc; padding: 0.625rem 0.875rem; font-size: 0.75rem; line-height: 1.5; color: #334155; }
+    .status-log p { margin: 0 0 0.375rem; }
+    .status-log p:last-child { margin-bottom: 0; }
     .debug-card { padding: 0; overflow: hidden; }
     .debug-card summary { padding: 0.875rem 1rem; cursor: pointer; font-size: 0.875rem; color: #475569; user-select: none; }
     .debug-card summary:hover { background: #f8fafc; }
@@ -30,7 +38,13 @@
     <div class="card">
       <h2>データソース</h2>
       <p>ODPT API から都営地下鉄のダイヤを取得します。</p>
-      <p id="status"></p>
+      <details class="status-panel">
+        <summary>
+          <span class="status-label">状態</span>
+          <span id="status" class="status-latest"></span>
+        </summary>
+        <div id="statusLog" class="status-log"></div>
+      </details>
     </div>
 
     <div class="card row">
@@ -52,12 +66,6 @@
       <button id="loadStations">停車駅と列車を読み込む</button>
       <div id="stepControls"></div>
       <div id="result"></div>
-    </div>
-
-    <div class="card">
-      <h2>状態</h2>
-      <p>ODPT API から都営地下鉄のダイヤを取得します。</p>
-      <p id="status"></p>
     </div>
 
     <details class="card debug-card">

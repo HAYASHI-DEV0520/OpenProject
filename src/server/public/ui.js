@@ -1,5 +1,6 @@
 const elements = {
     status: document.getElementById('status'),
+    statusLog: document.getElementById('statusLog'),
     railway: document.getElementById('railway'),
     calendar: document.getElementById('calendar'),
     direction: document.getElementById('direction'),
@@ -8,6 +9,41 @@ const elements = {
     stepControls: document.getElementById('stepControls'),
     debug: document.getElementById('debug')
 };
+
+class LogBuffer {
+    #logs = [];
+    #capacity;
+
+    constructor(capacity) {
+        this.#capacity = capacity;
+    }
+
+    push(message) {
+        this.#logs.push(message);
+
+        if (this.#logs.length > this.#capacity) {
+            this.#logs.shift();
+        }
+    }
+
+    clear() {
+        this.#logs.length = 0;
+    }
+
+    get size() {
+        return this.#logs.length;
+    }
+
+    toArray() {
+        return [...this.#logs];
+    }
+
+    [Symbol.iterator]() {
+        return this.#logs[Symbol.iterator]();
+    }
+}
+
+const statusLog = new LogBuffer(10);
 
 function setSelectOptions(select, placeholder, values, labelFor = value => value) {
     select.replaceChildren();
@@ -23,7 +59,12 @@ export function getSelectedConditions() {
     };
 }
 
-export function setStatus(message) {
+export function appendStatus(message) {
+    statusLog.push(message);
+    elements.statusLog.innerHTML = statusLog
+        .toArray()
+        .map(log => `<div>- ${log}</div>`)
+        .join("");
     elements.status.textContent = message;
 }
 

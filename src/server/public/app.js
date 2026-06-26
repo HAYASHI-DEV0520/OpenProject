@@ -10,9 +10,9 @@ let currentStations = [];
 async function updateStatus() {
     try {
         const data = await api.getStatus();
-        ui.setStatus(`ロード完了: ${data.records} 件のダイヤを読み込みました。`);
+        ui.appendStatus(`ロード完了: ${data.records} 件のダイヤを読み込みました。`);
     } catch (err) {
-        ui.setStatus(`エラー: ${err.message}`);
+        ui.appendStatus(`エラー: ${err.message}`);
     }
 }
 
@@ -139,9 +139,11 @@ async function main() {
     ui.resetCalendars();
     ui.resetDirections();
     await loadRailways();
+
     await pi.connect((msg) => {
         ui.setDebug("[relay server receive]" + msg.data);
     });
+    ui.appendStatus("web socketリレーサービスに接続しました。");
 }
 
 window.addEventListener("load", main);
