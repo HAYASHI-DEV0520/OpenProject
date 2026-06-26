@@ -209,5 +209,7 @@ loadStationsBtn.addEventListener('click', async () => {
 
 (async () => {
   //await updateStatus();
+    
   await loadRailways();
 })();
+

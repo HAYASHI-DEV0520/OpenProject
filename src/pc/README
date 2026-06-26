@@ -1,2 +1,0 @@
-NOTE: ローカルwebサーバを起動してからindex.htmlを開く
-例えば python -m http.server 8000 した後ブラウザでhttp://localhost:8000を開く
