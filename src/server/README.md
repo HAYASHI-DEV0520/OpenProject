@@ -13,6 +13,12 @@ ODPT API を使って都営交通の列車時刻表を取得し、
 npm install
 ```
 
+`.env` ファイルを作成して API キーを設定してください。
+
+```env
+ODPT_CONSUMER_KEY=your_consumer_key_here
+```
+
 ## 起動方法
 
 ```bash
@@ -26,7 +32,7 @@ npm run serve
 - `PORT`: Web サーバーの待ち受けポート（デフォルト: `3000`）
 - `ODPT_CONSUMER_KEY`: ODPT API のコンシューマーキー
 
-未指定時はコード内のデフォルトキーを使用します。
+`ODPT_CONSUMER_KEY` が未設定の場合、起動時にエラーになります。
 
 ## 利用可能なスクリプト
 

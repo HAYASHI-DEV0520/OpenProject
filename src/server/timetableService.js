@@ -1,10 +1,11 @@
+require('dotenv').config();
+
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
-const DEFAULT_CONSUMER_KEY = process.env.ODPT_CONSUMER_KEY;
 const TIMETABLE_API_BASE = 'https://api.odpt.org/api/v4/odpt:TrainTimetable';
 const DEFAULT_RAILWAYS = [
   'odpt.Railway:Toei.Arakawa',
