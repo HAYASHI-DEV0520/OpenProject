@@ -38,12 +38,7 @@ class TimetableService {
   }
 
   static async create(source) {
-    if (Array.isArray(source)) {
-      return TimetableService.createMulti(source);
-    }
-    const service = new TimetableService(source);
-    await service.load();
-    return service;
+    return TimetableService.createMulti(source);
   }
 
   static async createMulti(sources) {
