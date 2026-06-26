@@ -4,14 +4,14 @@ const path = require('path');
 const { URL } = require('url');
 const TimetableService = require('./timetableService');
 
-const API_URLS = TimetableService.getDefaultApiUrls();
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
 let timetable;
 
 async function startServer() {
   try {
-    timetable = await TimetableService.create(API_URLS);
+    const apiUrls = TimetableService.getDefaultApiUrls();
+    timetable = await TimetableService.create(apiUrls);
     const server = http.createServer(requestHandler);
     server.listen(PORT, () => {
       console.log(`Web server running at http://localhost:${PORT}`);
