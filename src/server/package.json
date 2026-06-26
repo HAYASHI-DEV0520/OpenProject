@@ -1,6 +1,7 @@
 {
   "name": "timetable-reader",
   "version": "1.0.0",
+  "type": "module",
   "description": "東京都営地下鉄のダイヤデータを効率的に管理・クエリするNode.jsサービス",
   "main": "timetableService.js",
   "scripts": {

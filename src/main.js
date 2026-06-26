@@ -11,6 +11,8 @@ let channel;
 async function connect() {
     let relay = RelayServer("chirimentest", "chirimenSocket", nodeWebSocketLib, "https://chirimen.org");
     channel = await relay.subscribe(CHANNEL_NAME);
-    console.log("web socketリレーサービスに接続しました");
-    channel.onmessage = msg => console.log(msg);
+    channel.onmessage = msg => console.log(msg.data);
+    channel.send("PiZero: web socketリレーサービスに接続しました");
 }
+
+connect();

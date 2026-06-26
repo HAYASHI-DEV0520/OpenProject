@@ -1,34 +1,6 @@
-import {
-    getCalendars,
-    getDestination,
-    getDirections,
-    getRailways,
-    getStations,
-    getStatus,
-    getTrain,
-    getTrains
-} from './api.js';
-import {
-    clearStepControls,
-    getSelectedConditions,
-    onCalendarChange,
-    onLoadStationsClick,
-    onRailwayChange,
-    renderStepControls,
-    resetCalendars,
-    resetDirections,
-    setBoardingTrains,
-    setBoardingTrainsLoading,
-    setCalendars,
-    setDebug,
-    setDirections,
-    setLoadStationsDisabled,
-    setRailways,
-    setResult,
-    setRideDetails,
-    setRideResult,
-    setStatus
-} from './ui.js';
+import * as api from './api.js';
+import * as ui from './ui.js';
+import * as pi from './pi.js';
 
 let selectedBoardingStation = null;
 let selectedTrain = null;
@@ -37,45 +9,45 @@ let currentStations = [];
 
 async function updateStatus() {
     try {
-        const data = await getStatus();
-        setStatus(`ロード完了: ${data.records} 件のダイヤを読み込みました。`);
+        const data = await api.getStatus();
+        ui.setStatus(`ロード完了: ${data.records} 件のダイヤを読み込みました。`);
     } catch (err) {
-        setStatus(`エラー: ${err.message}`);
+        ui.setStatus(`エラー: ${err.message}`);
     }
 }
 
 async function loadRailways() {
-    setRailways(await getRailways());
+    ui.setRailways(await api.getRailways());
 }
 
 async function loadCalendars() {
-    const { railway } = getSelectedConditions();
+    const { railway } = ui.getSelectedConditions();
     if (!railway) return;
-    setCalendars(await getCalendars(railway));
+    ui.setCalendars(await api.getCalendars(railway));
 }
 
 async function loadDirections() {
-    const { railway, calendar } = getSelectedConditions();
+    const { railway, calendar } = ui.getSelectedConditions();
     if (!railway || !calendar) return;
-    setDirections(await getDirections(railway, calendar));
+    ui.setDirections(await api.getDirections(railway, calendar));
 }
 
 async function loadStations() {
-    const { railway, calendar, direction } = getSelectedConditions();
+    const { railway, calendar, direction } = ui.getSelectedConditions();
     if (!railway || !calendar || !direction) {
-        setResult('線路・カレンダー・方向を選択してください。');
-        clearStepControls();
+        ui.setResult('線路・カレンダー・方向を選択してください。');
+        ui.clearStepControls();
         return;
     }
 
-    currentStations = await getStations(railway, calendar, direction);
-    const destination = await getDestination(railway, calendar, direction);
+    currentStations = await api.getStations(railway, calendar, direction);
+    const destination = await api.getDestination(railway, calendar, direction);
 
     selectedBoardingStation = null;
     selectedTrain = null;
     selectedAlightingStation = null;
 
-    renderStepControls({
+    ui.renderStepControls({
         stations: currentStations,
         destination,
         onBoardingStationChange: async station => {
@@ -89,50 +61,50 @@ async function loadStations() {
         onConfirmRide: confirmRide
     });
 
-    setDebug({ currentStations, destination });
+    ui.setDebug({ currentStations, destination });
 }
 
 async function loadTrainsForBoardingStation() {
-    setBoardingTrainsLoading();
+    ui.setBoardingTrainsLoading();
 
     if (!selectedBoardingStation) {
-        setBoardingTrains([], trainNumber => {
+        ui.setBoardingTrains([], trainNumber => {
             selectedTrain = trainNumber;
         });
         return;
     }
 
-    const { railway, calendar, direction } = getSelectedConditions();
-    const trains = await getTrains(selectedBoardingStation, railway, calendar, direction);
-    setBoardingTrains(trains, trainNumber => {
+    const { railway, calendar, direction } = ui.getSelectedConditions();
+    const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
+    ui.setBoardingTrains(trains, trainNumber => {
         selectedTrain = trainNumber;
     });
 }
 
-async function confirmRide(destination) {
+async function confirmRide() {
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) {
-        setRideResult('乗車駅、列車、降車駅をすべて選択してください。');
+        ui.setRideResult('乗車駅、列車、降車駅をすべて選択してください。');
         return;
     }
 
     if (selectedBoardingStation === selectedAlightingStation) {
-        setRideResult('乗車駅と降車駅が同じです。別の駅を選択してください。');
+        ui.setRideResult('乗車駅と降車駅が同じです。別の駅を選択してください。');
         return;
     }
 
-    const timetable = await getTrain(selectedTrain);
+    const timetable = await api.getTrain(selectedTrain);
     const boardIndex = timetable.stops.findIndex(stop => stop.station === selectedBoardingStation);
     const alightIndex = timetable.stops.findIndex(stop => stop.station === selectedAlightingStation);
 
     if (boardIndex === -1 || alightIndex === -1 || alightIndex <= boardIndex) {
-        setRideResult('選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。');
+        ui.setRideResult('選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。');
         return;
     }
 
     const boardingTime = timetable.stops[boardIndex].arrivalTime || timetable.stops[boardIndex].departureTime || '不明';
     const alightingTime = timetable.stops[alightIndex].arrivalTime || timetable.stops[alightIndex].departureTime || '不明';
 
-    setRideDetails({
+    ui.setRideDetails({
         boardingStation: selectedBoardingStation,
         trainNumber: selectedTrain,
         boardingTime,
@@ -141,30 +113,35 @@ async function confirmRide(destination) {
     });
 }
 
-onRailwayChange(async () => {
-    resetCalendars();
-    resetDirections();
+ui.onRailwayChange(async () => {
+    ui.resetCalendars();
+    ui.resetDirections();
     await loadCalendars();
 });
 
-onCalendarChange(async () => {
+ui.onCalendarChange(async () => {
     await loadDirections();
 });
 
-onLoadStationsClick(async () => {
-    setLoadStationsDisabled(true);
+ui.onLoadStationsClick(async () => {
+    ui.setLoadStationsDisabled(true);
     try {
         await loadStations();
     } catch (err) {
-        setResult(`エラー: ${err.message}`);
+        ui.setResult(`エラー: ${err.message}`);
     } finally {
-        setLoadStationsDisabled(false);
+        ui.setLoadStationsDisabled(false);
     }
 });
 
-(async () => {
+async function main() {
     await updateStatus();
-    resetCalendars();
-    resetDirections();
+    ui.resetCalendars();
+    ui.resetDirections();
     await loadRailways();
-})();
+    await pi.connect((msg) => {
+        ui.setDebug("[relay server receive]" + msg.data);
+    });
+}
+
+window.addEventListener("load", main);

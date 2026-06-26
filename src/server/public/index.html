@@ -16,6 +16,10 @@
     button:disabled { background: #a5b4fc; cursor: not-allowed; }
     pre { white-space: pre-wrap; word-break: break-word; }
     .row { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+    .debug-card { padding: 0; overflow: hidden; }
+    .debug-card summary { padding: 0.875rem 1rem; cursor: pointer; font-size: 0.875rem; color: #475569; user-select: none; }
+    .debug-card summary:hover { background: #f8fafc; }
+    .debug-card pre { margin: 0; padding: 0.875rem 1rem; border-top: 1px solid #e2e8f0; background: #0f172a; color: #dbeafe; font-size: 0.75rem; line-height: 1.5; max-height: 240px; overflow: auto; }
   </style>
 </head>
 <body>
@@ -51,9 +55,15 @@
     </div>
 
     <div class="card">
-      <h2>デバッグ情報</h2>
-      <pre id="debug" style="display:none"></pre>
+      <h2>状態</h2>
+      <p>ODPT API から都営地下鉄のダイヤを取得します。</p>
+      <p id="status"></p>
     </div>
+
+    <details class="card debug-card">
+      <summary>デバッグ情報を表示</summary>
+      <pre id="debug">まだデバッグ情報はありません。</pre>
+    </details>
   </main>
   <script type="module" src="app.js"></script>
 </body>
