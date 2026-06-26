@@ -19,6 +19,17 @@ const api = {
   status: '/api/status'
 };
 
+function normalizeLocalizedItem(item) {
+  if (typeof item === 'string') {
+    return { id: item, nameJa: item };
+  }
+
+  return {
+    id: item?.id || '',
+    nameJa: item?.nameJa || item?.id || ''
+  };
+}
+
 async function fetchJson(url) {
   const res = await fetch(url);
   if (!res.ok) {
@@ -37,8 +48,8 @@ async function updateStatus() {
 }
 
 async function loadRailways() {
-  const railways = await fetchJson(api.railways);
-  railwayEl.innerHTML = '<option value="">線路を選択</option>' + railways.map(r => `<option value="${r}">${r}</option>`).join('');
+  const railways = (await fetchJson(api.railways)).map(normalizeLocalizedItem);
+  railwayEl.innerHTML = '<option value="">線路を選択</option>' + railways.map(r => `<option value="${r.id}">${r.nameJa} (${r.id})</option>`).join('');
 }
 
 async function loadCalendars() {
@@ -62,6 +73,11 @@ let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
 
+function stationNameById(stationId) {
+  const station = currentStations.find(s => s.id === stationId);
+  return station ? station.nameJa : stationId;
+}
+
 async function loadStations() {
   const railway = railwayEl.value;
   const calendar = calendarEl.value;
@@ -72,8 +88,8 @@ async function loadStations() {
     return;
   }
 
-  currentStations = await fetchJson(`${api.stations}?railway=${encodeURIComponent(railway)}&calendar=${encodeURIComponent(calendar)}&direction=${encodeURIComponent(direction)}`);
-  const destination = await fetchJson(`${api.destination}?railway=${encodeURIComponent(railway)}&calendar=${encodeURIComponent(calendar)}&direction=${encodeURIComponent(direction)}`);
+  currentStations = (await fetchJson(`${api.stations}?railway=${encodeURIComponent(railway)}&calendar=${encodeURIComponent(calendar)}&direction=${encodeURIComponent(direction)}`)).map(normalizeLocalizedItem);
+  const destination = normalizeLocalizedItem(await fetchJson(`${api.destination}?railway=${encodeURIComponent(railway)}&calendar=${encodeURIComponent(calendar)}&direction=${encodeURIComponent(direction)}`));
 
   boardingStations = currentStations;
   selectedBoardingStation = null;
@@ -90,7 +106,7 @@ function renderStepControls(destination) {
     <div class="row">
       <div>
         <label for="boardingStation">乗車駅</label>
-        <select id="boardingStation"><option value="">乗車駅を選択</option>${boardingStations.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+        <select id="boardingStation"><option value="">乗車駅を選択</option>${boardingStations.map(s => `<option value="${s.id}">${s.nameJa}</option>`).join('')}</select>
       </div>
       <div>
         <label for="trainByTime">乗車時間で列車を選択</label>
@@ -98,7 +114,7 @@ function renderStepControls(destination) {
       </div>
       <div>
         <label for="alightingStation">降車駅</label>
-        <select id="alightingStation"><option value="">降車駅を選択</option>${currentStations.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+        <select id="alightingStation"><option value="">降車駅を選択</option>${currentStations.map(s => `<option value="${s.id}">${s.nameJa}</option>`).join('')}</select>
       </div>
     </div>
     <button id="confirmRide">乗車列車を確定</button>
@@ -170,18 +186,18 @@ async function confirmRide(destination) {
 
   rideResultEl.innerHTML = `
     <h3>乗車情報</h3>
-    <p>乗車駅: ${selectedBoardingStation}</p>
+    <p>乗車駅: ${stationNameById(selectedBoardingStation)} (${selectedBoardingStation})</p>
     <p>乗車列車: ${selectedTrain}</p>
     <p>乗車時間: ${boardingTime}</p>
-    <p>降車駅: ${selectedAlightingStation}</p>
+    <p>降車駅: ${stationNameById(selectedAlightingStation)} (${selectedAlightingStation})</p>
     <h1>推定降車時間: ${alightingTime}</h1>
   `;
 }
 
 function showRouteInfo(destination) {
-  const stationHtml = currentStations.map((s, idx) => `<li>${s}</li>`).join('');
+  const stationHtml = currentStations.map((s) => `<li>${s.nameJa} (${s.id})</li>`).join('');
   resultEl.innerHTML = `
-    <p>終着駅: ${destination}</p>
+    <p>終着駅: ${destination.nameJa} (${destination.id})</p>
     <h3>停車駅</h3>
     <ol>${stationHtml}</ol>
   `;

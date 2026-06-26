@@ -9,6 +9,10 @@ class TimetableService {
     this.source = source;
     this.data = null;
     this.indexedData = {};
+    this.localization = {
+      railways: {},
+      stations: {}
+    };
   }
 
   static async create(source) {
@@ -24,6 +28,7 @@ class TimetableService {
     const service = new TimetableService(null);
     const results = await Promise.all(sources.map(s => service.loadFromUrl(s)));
     service.data = results.flat();
+    await service.loadLocalizationDataFromSources(sources);
     console.log(`✓ Loaded ${service.data.length} timetable records from ${sources.length} railways`);
     service.buildIndexes();
     return service;
@@ -42,6 +47,7 @@ class TimetableService {
     try {
       if (this.isRemoteSource()) {
         this.data = await this.loadFromUrl(this.source);
+        await this.loadLocalizationDataFromSources([this.source]);
       } else {
         this.data = this.loadFromFile(this.source);
       }
@@ -51,6 +57,96 @@ class TimetableService {
       console.error('Error loading timetable data:', err.message);
       throw err;
     }
+  }
+
+  async loadLocalizationDataFromSources(sources) {
+    const railwayIds = new Set();
+    let consumerKey = null;
+
+    sources.forEach((source) => {
+      try {
+        const sourceUrl = new URL(source);
+        const railwayId = sourceUrl.searchParams.get('odpt:railway');
+        const sourceKey = sourceUrl.searchParams.get('acl:consumerKey');
+        if (railwayId) {
+          railwayIds.add(railwayId);
+        }
+        if (!consumerKey && sourceKey) {
+          consumerKey = sourceKey;
+        }
+      } catch (err) {
+        // Ignore invalid source URLs for localization metadata lookup.
+      }
+    });
+
+    if (!consumerKey || railwayIds.size === 0) {
+      return;
+    }
+
+    const metadataRequests = Array.from(railwayIds).map((railwayId) => {
+      const metadataUrl = `https://api.odpt.org/api/v4/odpt:Railway?acl:consumerKey=${encodeURIComponent(consumerKey)}&owl:sameAs=${encodeURIComponent(railwayId)}`;
+      return this.loadFromUrl(metadataUrl)
+        .then((records) => ({ railwayId, records }))
+        .catch((err) => {
+          console.warn(`Failed to load localization for ${railwayId}: ${err.message}`);
+          return null;
+        });
+    });
+
+    const metadataResults = await Promise.all(metadataRequests);
+
+    metadataResults.forEach((item) => {
+      if (!item || !Array.isArray(item.records) || item.records.length === 0) {
+        return;
+      }
+
+      const railway = item.records[0];
+      const railwayTitle = railway['dc:title'] || railway['odpt:railwayTitle']?.ja || item.railwayId;
+      this.localization.railways[item.railwayId] = railwayTitle;
+
+      const stationOrder = railway['odpt:stationOrder'] || [];
+      stationOrder.forEach((stationInfo) => {
+        const stationId = stationInfo['odpt:station'];
+        const stationTitle = stationInfo['odpt:stationTitle']?.ja || stationInfo['odpt:stationTitle']?.en;
+        if (stationId && stationTitle) {
+          this.localization.stations[stationId] = stationTitle;
+        }
+      });
+    });
+  }
+
+  getRailwayNameJa(railwayId) {
+    return this.localization.railways[railwayId] || railwayId;
+  }
+
+  getStationNameJa(stationId) {
+    return this.localization.stations[stationId] || stationId;
+  }
+
+  getRailwaysLocalized() {
+    return this.getRailways().map((id) => ({
+      id,
+      nameJa: this.getRailwayNameJa(id)
+    }));
+  }
+
+  getStationsLocalized(railway, calendar, direction) {
+    return this.getStations(railway, calendar, direction).map((id) => ({
+      id,
+      nameJa: this.getStationNameJa(id)
+    }));
+  }
+
+  getDestinationStationLocalized(railway, calendar, direction) {
+    const id = this.getDestinationStation(railway, calendar, direction);
+    if (!id) {
+      return null;
+    }
+
+    return {
+      id,
+      nameJa: this.getStationNameJa(id)
+    };
   }
 
   loadFromFile(filePath) {
@@ -259,7 +355,13 @@ class TimetableService {
       trains = trains.filter(t => t.direction === direction);
     }
     
-    return trains.sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+    return trains
+      .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
+      .map((train) => ({
+        ...train,
+        railwayNameJa: this.getRailwayNameJa(train.railway),
+        destinationNameJa: this.getStationNameJa(train.destination)
+      }));
   }
 
   // 特定の列車が特定の駅に到着する時間を取得
@@ -304,10 +406,13 @@ class TimetableService {
     return {
       trainNumber: timetable['odpt:trainNumber'],
       railway: timetable['odpt:railway'],
+      railwayNameJa: this.getRailwayNameJa(timetable['odpt:railway']),
       calendar: timetable['odpt:calendar'],
       direction: timetable['odpt:railDirection'],
       originStation: timetable['odpt:originStation'][0],
       destinationStation: timetable['odpt:destinationStation'][0],
+      originStationNameJa: this.getStationNameJa(timetable['odpt:originStation'][0]),
+      destinationStationNameJa: this.getStationNameJa(timetable['odpt:destinationStation'][0]),
       stops: result
     };
   }
