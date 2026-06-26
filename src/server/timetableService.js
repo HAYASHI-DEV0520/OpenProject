@@ -4,6 +4,16 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
+const DEFAULT_CONSUMER_KEY = 'ms2saxu92zu9sjq7dptyil6mv2osfcl1n9pp3fei40vi4mx4w2nqaz71h1qpj6ev';
+const TIMETABLE_API_BASE = 'https://api.odpt.org/api/v4/odpt:TrainTimetable';
+const DEFAULT_RAILWAYS = [
+  'odpt.Railway:Toei.Arakawa',
+  'odpt.Railway:Toei.Asakusa',
+  'odpt.Railway:Toei.Mita',
+  'odpt.Railway:Toei.Shinjuku',
+  'odpt.Railway:Toei.NipporiToneri'
+];
+
 class TimetableService {
   constructor(source) {
     this.source = source;
@@ -13,6 +23,13 @@ class TimetableService {
       railways: {},
       stations: {}
     };
+  }
+
+  static getDefaultApiUrls() {
+    const consumerKey = process.env.ODPT_CONSUMER_KEY || DEFAULT_CONSUMER_KEY;
+    return DEFAULT_RAILWAYS.map(
+      (railwayId) => `${TIMETABLE_API_BASE}?acl:consumerKey=${encodeURIComponent(consumerKey)}&odpt:railway=${encodeURIComponent(railwayId)}`
+    );
   }
 
   static async create(source) {
