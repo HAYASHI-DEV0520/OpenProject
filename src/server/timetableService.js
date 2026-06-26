@@ -12,8 +12,20 @@ class TimetableService {
   }
 
   static async create(source) {
+    if (Array.isArray(source)) {
+      return TimetableService.createMulti(source);
+    }
     const service = new TimetableService(source);
     await service.load();
+    return service;
+  }
+
+  static async createMulti(sources) {
+    const service = new TimetableService(null);
+    const results = await Promise.all(sources.map(s => service.loadFromUrl(s)));
+    service.data = results.flat();
+    console.log(`✓ Loaded ${service.data.length} timetable records from ${sources.length} railways`);
+    service.buildIndexes();
     return service;
   }
 
@@ -153,8 +165,7 @@ class TimetableService {
 
   // 線路のリストを取得
   getRailways() {
-    // 荒川線のみを返す
-    return this.indexedData.railways.filter(r => r === 'odpt.Railway:Toei.Arakawa');
+    return this.indexedData.railways;
   }
 
   // 線路のカレンダータイプのリストを取得

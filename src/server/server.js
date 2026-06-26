@@ -4,14 +4,22 @@ const path = require('path');
 const { URL } = require('url');
 const TimetableService = require('./timetableService');
 
-const API_URL = 'https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei';
+const API_BASE = 'https://api.odpt.org/api/v4/odpt:TrainTimetable?acl:consumerKey=ms2saxu92zu9sjq7dptyil6mv2osfcl1n9pp3fei40vi4mx4w2nqaz71h1qpj6ev';
+const RAILWAYS = [
+  'odpt.Railway:Toei.Arakawa',
+  'odpt.Railway:Toei.Asakusa',
+  'odpt.Railway:Toei.Mita',
+  'odpt.Railway:Toei.Shinjuku',
+  'odpt.Railway:Toei.NipporiToneri',
+];
+const API_URLS = RAILWAYS.map(r => `${API_BASE}&odpt:railway=${r}`);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
 let timetable;
 
 async function startServer() {
   try {
-    timetable = await TimetableService.create(API_URL);
+    timetable = await TimetableService.create(API_URLS);
     const server = http.createServer(requestHandler);
     server.listen(PORT, () => {
       console.log(`Web server running at http://localhost:${PORT}`);
