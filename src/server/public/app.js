@@ -19,14 +19,28 @@ const api = {
   status: '/api/status'
 };
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
 function normalizeLocalizedItem(item) {
   if (typeof item === 'string') {
-    return { id: item, nameJa: item };
+    const safe = escapeHtml(item);
+    return { id: safe, nameJa: safe };
   }
 
+  const id = item?.id ?? '';
+  const nameJa = item?.nameJa ?? item?.id ?? '';
+
   return {
-    id: item?.id || '',
-    nameJa: item?.nameJa || item?.id || ''
+    id: escapeHtml(id),
+    nameJa: escapeHtml(nameJa)
   };
 }
 
