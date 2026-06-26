@@ -4,7 +4,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
-const DEFAULT_CONSUMER_KEY = 'ms2saxu92zu9sjq7dptyil6mv2osfcl1n9pp3fei40vi4mx4w2nqaz71h1qpj6ev';
+const DEFAULT_CONSUMER_KEY = process.env.ODPT_CONSUMER_KEY;
 const TIMETABLE_API_BASE = 'https://api.odpt.org/api/v4/odpt:TrainTimetable';
 const DEFAULT_RAILWAYS = [
   'odpt.Railway:Toei.Arakawa',
