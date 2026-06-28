@@ -43,13 +43,19 @@ npm run serve
 
 ```text
 .
-├── server.js              # HTTPサーバーとAPIエンドポイント
-├── timetableService.js    # 時刻表データ読み込み・インデックス化・検索ロジック
-├── example.js             # サービス利用例
-└── public/
-    ├── index.html         # フロントエンドUI
-    ├── app.js             # 画面ロジック
-    └── WEB_APP.md         # 画面仕様メモ
+├── app/
+│   ├── server.js          # HTTPサーバーとAPIエンドポイント
+│   ├── timetableService.js # 時刻表データ読み込み・インデックス化・検索ロジック
+│   ├── example.js         # サービス利用例
+│   ├── relayClient.js     # Relay接続用のNodeクライアント
+│   ├── public/
+│   │   ├── index.html     # フロントエンドUI
+│   │   ├── app.js         # 画面ロジック
+│   │   └── WEB_APP.md     # 画面仕様メモ
+│   └── pc/
+│       ├── index.html     # PC向け画面
+│       └── pc.js
+└── package.json
 ```
 
 ## サーバー API
