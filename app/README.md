@@ -47,7 +47,6 @@ npm run serve
 │   ├── server.js          # HTTPサーバーとAPIエンドポイント
 │   ├── timetableService.js # 時刻表データ読み込み・インデックス化・検索ロジック
 │   ├── example.js         # サービス利用例
-│   ├── relayClient.js     # Relay接続用のNodeクライアント
 │   ├── public/
 │   │   ├── index.html     # フロントエンドUI
 │   │   ├── app.js         # 画面ロジック
