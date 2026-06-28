@@ -48,5 +48,10 @@ jobs:
                 "Namespace": "aws:elasticbeanstalk:environment",
                 "OptionName": "ServiceRole",
                 "Value": "aws-elasticbeanstalk-service-role"
+              },
+              {
+                "Namespace": "aws:elasticbeanstalk:application:environment",
+                "OptionName": "ODPT_CONSUMER_KEY",
+                "Value": "${{ secrets.ODPT_CONSUMER_KEY }}"
               }
             ]
