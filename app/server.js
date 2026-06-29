@@ -4,14 +4,14 @@ const path = require('path');
 const { URL } = require('url');
 const TimetableService = require('./timetableService');
 
-const API_URL = 'https://api-public.odpt.org/api/v4/odpt:TrainTimetable?odpt:operator=odpt.Operator:Toei';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = process.env.PORT || 3000;
 let timetable;
 
 async function startServer() {
   try {
-    timetable = await TimetableService.create(API_URL);
+    const apiUrls = TimetableService.getDefaultApiUrls();
+    timetable = await TimetableService.create(apiUrls);
     const server = http.createServer(requestHandler);
     server.listen(PORT, () => {
       console.log(`Web server running at http://localhost:${PORT}`);
@@ -74,7 +74,7 @@ async function handleApiRequest(url, res) {
 
     switch (pathname) {
       case '/api/railways':
-        result = timetable.getRailways();
+        result = timetable.getRailwaysLocalized();
         break;
       case '/api/calendars':
         result = timetable.getCalendars(searchParams.get('railway'));
@@ -86,14 +86,14 @@ async function handleApiRequest(url, res) {
         );
         break;
       case '/api/destination':
-        result = timetable.getDestinationStation(
+        result = timetable.getDestinationStationLocalized(
           searchParams.get('railway'),
           searchParams.get('calendar'),
           searchParams.get('direction')
         );
         break;
       case '/api/stations':
-        result = timetable.getStations(
+        result = timetable.getStationsLocalized(
           searchParams.get('railway'),
           searchParams.get('calendar'),
           searchParams.get('direction')

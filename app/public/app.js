@@ -7,6 +7,40 @@ let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
 
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+function normalizeLocalizedItem(item) {
+  if (typeof item === 'string') {
+    const safe = escapeHtml(item);
+    return { id: safe, nameJa: safe };
+  }
+
+  const id = item?.id ?? '';
+  const nameJa = item?.nameJa ?? item?.id ?? '';
+
+  return {
+    id: escapeHtml(id),
+    nameJa: escapeHtml(nameJa)
+  };
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
 async function updateStatus() {
     try {
         const data = await api.getStatus();
@@ -17,7 +51,7 @@ async function updateStatus() {
 }
 
 async function loadRailways() {
-    ui.setRailways(await api.getRailways());
+    ui.setRailways(await api.getRailways().map(normalizeLocalizedItem));
 }
 
 async function loadCalendars() {
@@ -32,6 +66,17 @@ async function loadDirections() {
     ui.setDirections(await api.getDirections(railway, calendar));
 }
 
+let boardingStations = [];
+let selectedBoardingStation = null;
+let selectedTrain = null;
+let selectedAlightingStation = null;
+let currentStations = [];
+
+function stationNameById(stationId) {
+  const station = currentStations.find(s => s.id === stationId);
+  return station ? station.nameJa : stationId;
+}
+
 async function loadStations() {
     const { railway, calendar, direction } = ui.getSelectedConditions();
     if (!railway || !calendar || !direction) {
@@ -40,8 +85,8 @@ async function loadStations() {
         return;
     }
 
-    currentStations = await api.getStations(railway, calendar, direction);
-    const destination = await api.getDestination(railway, calendar, direction);
+    currentStations = await api.getStations(railway, calendar, direction).map(normalizeLocalizedItem);
+    const destination = normalizeLocalizedItem(await api.getDestination(railway, calendar, direction));
 
     selectedBoardingStation = null;
     selectedTrain = null;
@@ -105,10 +150,10 @@ async function confirmRide() {
     const alightingTime = timetable.stops[alightIndex].arrivalTime || timetable.stops[alightIndex].departureTime || '不明';
 
     ui.setRideDetails({
-        boardingStation: selectedBoardingStation,
+        boardingStation: stationNameById(selectedBoardingStation),
         trainNumber: selectedTrain,
         boardingTime,
-        alightingStation: selectedAlightingStation,
+        alightingStation: stationNameById(selectedAlightingStation),
         alightingTime
     });
 }
