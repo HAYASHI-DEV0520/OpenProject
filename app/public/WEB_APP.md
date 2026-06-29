@@ -8,7 +8,7 @@ Toei Timetable Explorer は、東京都営荒川線のダイヤデータを検�
 
 ### 1. 線路選択
 
-- **対応線路**: 都営荒川線のみ
+- **対応線路**: 都営荒川線・都営浅草線・都営三田線・都営新宿線・日暮里・舎人ライナー
 - 起動時に自動的に利用可能な線路を読み込みます
 - ドロップダウンメニューから線路を選択します
 
@@ -126,7 +126,10 @@ Toei Timetable Explorer は、東京都営荒川線のダイヤデータを検�
 
 **レスポンス例**:
 ```json
-["odpt.Railway:Toei.Arakawa"]
+[
+  { "id": "odpt.Railway:Toei.Arakawa", "nameJa": "都電荒川線" },
+  { "id": "odpt.Railway:Toei.Asakusa", "nameJa": "都営浅草線" }
+]
 ```
 
 ### `/api/calendars?railway={railway}`
@@ -162,11 +165,14 @@ Toei Timetable Explorer は、東京都営荒川線のダイヤデータを検�
 
 **レスポンス例**:
 ```json
-["odpt.Station:Toei.Arakawa.Oguchistation", "odpt.Station:Toei.Arakawa.Arakawa", ...]
+[
+  { "id": "odpt.Station:Toei.Arakawa.Oguchistation", "nameJa": "荒川車庫前" },
+  { "id": "odpt.Station:Toei.Arakawa.Arakawa", "nameJa": "荒川遊園地前" }
+]
 ```
 
 ### `/api/destination?railway={railway}&calendar={calendar}&direction={direction}`
-指定の条件の終着駅を取得します。
+指定の条件の終着駅を取得します（ローカライズ済み）。
 
 **パラメータ**:
 - `railway`: 線路URI
@@ -175,7 +181,7 @@ Toei Timetable Explorer は、東京都営荒川線のダイヤデータを検�
 
 **レスポンス例**:
 ```json
-"odpt.Station:Toei.Arakawa.Waseda"
+{ "id": "odpt.Station:Toei.Arakawa.Waseda", "nameJa": "早稲田" }
 ```
 
 ### `/api/trains?station={station}&railway={railway}&calendar={calendar}&direction={direction}`

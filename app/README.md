@@ -49,11 +49,11 @@ npm run serve
 │   ├── example.js         # サービス利用例
 │   ├── public/
 │   │   ├── index.html     # フロントエンドUI
-│   │   ├── app.js         # 画面ロジック
+│   │   ├── app.js         # 画面ロジック（選択フロー制御）
+│   │   ├── api.js         # APIクライアント
+│   │   ├── ui.js          # UI更新ヘルパー
+│   │   ├── pi.js          # Raspberry Pi 連携
 │   │   └── WEB_APP.md     # 画面仕様メモ
-│   └── pc/
-│       ├── index.html     # PC向け画面
-│       └── pc.js
 └── package.json
 ```
 
