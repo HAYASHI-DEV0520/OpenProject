@@ -45,10 +45,15 @@ class LogBuffer {
 
 const statusLog = new LogBuffer(10);
 
-function setSelectOptions(select, placeholder, values) {
+function setSelectOptions(select, placeholder, values, toID, toLabel) {
     select.replaceChildren();
     select.append(new Option(placeholder, ''));
-    values.forEach(value => select.append(new Option(value.nameJa, value.id)));
+    if(!toID){
+        values.forEach(value => select.append(new Option(value.nameJa, value.id)));
+    } else {
+        values.forEach(value => select.append(new Option(toLabel(value), toID(value))));
+    }
+    
 }
 
 export function getSelectedConditions() {
@@ -148,9 +153,9 @@ export function setBoardingTrains(trains, onTrainChange) {
     setSelectOptions(
         trainSelect,
         '列車を選択',
-        trains.map(train => train.trainNumber),
-        trainNumber => {
-            const train = trains.find(item => item.trainNumber === trainNumber);
+        trains,
+        train => train.trainNumber,
+        train => {
             return `${train.arrivalTime} - ${train.trainNumber}`;
         }
     );

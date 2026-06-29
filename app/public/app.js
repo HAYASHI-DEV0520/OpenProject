@@ -115,6 +115,8 @@ async function loadTrainsForBoardingStation() {
         return;
     }
 
+
+
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
     ui.setBoardingTrains(trains, trainNumber => {
