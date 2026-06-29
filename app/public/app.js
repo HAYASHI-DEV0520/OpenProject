@@ -2,6 +2,7 @@ import * as api from './api.js';
 import * as ui from './ui.js';
 import * as pi from './pi.js';
 
+let boardingStations = [];
 let selectedBoardingStation = null;
 let selectedTrain = null;
 let selectedAlightingStation = null;
@@ -51,26 +52,21 @@ async function updateStatus() {
 }
 
 async function loadRailways() {
-    ui.setRailways(await api.getRailways().map(normalizeLocalizedItem));
+    ui.setRailways((await api.getRailways()).map(normalizeLocalizedItem));
 }
 
 async function loadCalendars() {
     const { railway } = ui.getSelectedConditions();
     if (!railway) return;
-    ui.setCalendars(await api.getCalendars(railway));
+    ui.setCalendars((await api.getCalendars(railway)).map(normalizeLocalizedItem));
 }
 
 async function loadDirections() {
     const { railway, calendar } = ui.getSelectedConditions();
     if (!railway || !calendar) return;
-    ui.setDirections(await api.getDirections(railway, calendar));
+    ui.setDirections((await api.getDirections(railway, calendar)).map(normalizeLocalizedItem));
 }
 
-let boardingStations = [];
-let selectedBoardingStation = null;
-let selectedTrain = null;
-let selectedAlightingStation = null;
-let currentStations = [];
 
 function stationNameById(stationId) {
   const station = currentStations.find(s => s.id === stationId);
@@ -85,7 +81,7 @@ async function loadStations() {
         return;
     }
 
-    currentStations = await api.getStations(railway, calendar, direction).map(normalizeLocalizedItem);
+    currentStations = (await api.getStations(railway, calendar, direction)).map(normalizeLocalizedItem);
     const destination = normalizeLocalizedItem(await api.getDestination(railway, calendar, direction));
 
     selectedBoardingStation = null;

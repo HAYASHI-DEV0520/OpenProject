@@ -45,10 +45,10 @@ class LogBuffer {
 
 const statusLog = new LogBuffer(10);
 
-function setSelectOptions(select, placeholder, values, labelFor = value => value) {
+function setSelectOptions(select, placeholder, values) {
     select.replaceChildren();
     select.append(new Option(placeholder, ''));
-    values.forEach(value => select.append(new Option(labelFor(value), value)));
+    values.forEach(value => select.append(new Option(value.nameJa, value.id)));
 }
 
 export function getSelectedConditions() {
