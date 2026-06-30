@@ -1,4 +1,8 @@
-use std::{collections::{HashMap, HashSet}, env, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    env,
+    time::Duration,
+};
 
 use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
@@ -91,56 +95,56 @@ struct LocalizedTitle {
     en: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalizedItem {
-    id: String,
-    name_ja: String,
+    pub id: String,
+    pub name_ja: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ArrivalRecord {
-    railway: String,
-    calendar: String,
-    direction: String,
-    train_number: String,
-    destination: String,
-    arrival_time: String,
-    stop_index: usize,
-    railway_name_ja: String,
-    destination_name_ja: String,
+    pub railway: String,
+    pub calendar: String,
+    pub direction: String,
+    pub train_number: String,
+    pub destination: String,
+    pub arrival_time: String,
+    pub stop_index: usize,
+    pub railway_name_ja: String,
+    pub destination_name_ja: String,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrainTimetableResponse {
-    train_number: String,
-    railway: String,
-    railway_name_ja: String,
-    calendar: String,
-    direction: String,
-    origin_station: String,
-    destination_station: String,
-    origin_station_name_ja: String,
-    destination_station_name_ja: String,
-    stops: Vec<TrainStopResponse>,
+    pub train_number: String,
+    pub railway: String,
+    pub railway_name_ja: String,
+    pub calendar: String,
+    pub direction: String,
+    pub origin_station: String,
+    pub destination_station: String,
+    pub origin_station_name_ja: String,
+    pub destination_station_name_ja: String,
+    pub stops: Vec<TrainStopResponse>,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TrainStopResponse {
-    order: usize,
-    station: String,
-    arrival_time: Option<String>,
-    departure_time: Option<String>,
-    platform_number: Option<String>,
+    pub order: usize,
+    pub station: String,
+    pub arrival_time: Option<String>,
+    pub departure_time: Option<String>,
+    pub platform_number: Option<String>,
 }
 
 impl TimetableService {
     pub fn get_default_api_urls() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-        let consumer_key =
-            env::var("ODPT_CONSUMER_KEY").map_err(|_| "Missing required env var: ODPT_CONSUMER_KEY")?;
+        let consumer_key = env::var("ODPT_CONSUMER_KEY")
+            .map_err(|_| "Missing required env var: ODPT_CONSUMER_KEY")?;
 
         Ok(DEFAULT_RAILWAYS
             .iter()
@@ -169,7 +173,11 @@ impl TimetableService {
 
         let mut results = Vec::with_capacity(sources.len());
         for source in &sources {
-            results.push(service.load_from_url::<Vec<TimetableRecord>>(source).await?);
+            results.push(
+                service
+                    .load_from_url::<Vec<TimetableRecord>>(source)
+                    .await?,
+            );
         }
 
         service.data = results.into_iter().flatten().collect();
@@ -263,7 +271,9 @@ impl TimetableService {
             .data
             .iter()
             .filter(|item| {
-                item.railway == railway && item.calendar == calendar && item.rail_direction == direction
+                item.railway == railway
+                    && item.calendar == calendar
+                    && item.rail_direction == direction
             })
             .collect::<Vec<_>>();
 
@@ -280,7 +290,9 @@ impl TimetableService {
             .data
             .iter()
             .filter(|item| {
-                item.railway == railway && item.calendar == calendar && item.rail_direction == direction
+                item.railway == railway
+                    && item.calendar == calendar
+                    && item.rail_direction == direction
             })
             .collect::<Vec<_>>();
 
@@ -340,7 +352,10 @@ impl TimetableService {
         station: &str,
     ) -> Option<String> {
         let trains = self.get_trains_arriving_at_station(station, None, None, None);
-        let Some(train) = trains.into_iter().find(|item| item.train_number == train_number) else {
+        let Some(train) = trains
+            .into_iter()
+            .find(|item| item.train_number == train_number)
+        else {
             eprintln!("Train {train_number} does not arrive at {station}");
             return None;
         };
@@ -371,8 +386,16 @@ impl TimetableService {
             })
             .collect();
 
-        let origin_station = timetable.origin_station.first().cloned().unwrap_or_default();
-        let destination_station = timetable.destination_station.first().cloned().unwrap_or_default();
+        let origin_station = timetable
+            .origin_station
+            .first()
+            .cloned()
+            .unwrap_or_default();
+        let destination_station = timetable
+            .destination_station
+            .first()
+            .cloned()
+            .unwrap_or_default();
 
         Some(TrainTimetableResponse {
             train_number: timetable.train_number.clone(),
@@ -394,9 +417,10 @@ impl TimetableService {
 
         for source in sources {
             if let Ok(source_url) = Url::parse(source) {
-                if let Some(railway_id) = source_url.query_pairs().find_map(|(key, value)| {
-                    (key == "odpt:railway").then(|| value.into_owned())
-                }) {
+                if let Some(railway_id) = source_url
+                    .query_pairs()
+                    .find_map(|(key, value)| (key == "odpt:railway").then(|| value.into_owned()))
+                {
                     railway_ids.insert(railway_id);
                 }
 
@@ -423,13 +447,21 @@ impl TimetableService {
                 urlencoding::encode(&railway_id)
             );
 
-            match self.load_from_url::<Vec<RailwayMetadata>>(&metadata_url).await {
+            match self
+                .load_from_url::<Vec<RailwayMetadata>>(&metadata_url)
+                .await
+            {
                 Ok(records) if !records.is_empty() => {
                     let railway = &records[0];
                     let railway_title = railway
                         .dc_title
                         .clone()
-                        .or_else(|| railway.railway_title.as_ref().and_then(|value| value.ja.clone()))
+                        .or_else(|| {
+                            railway
+                                .railway_title
+                                .as_ref()
+                                .and_then(|value| value.ja.clone())
+                        })
                         .unwrap_or_else(|| railway_id.clone());
                     self.localization
                         .railways
@@ -495,7 +527,11 @@ impl TimetableService {
 
             train_map.insert(timetable.train_number.clone(), timetable.clone());
 
-            let destination = timetable.destination_station.first().cloned().unwrap_or_default();
+            let destination = timetable
+                .destination_station
+                .first()
+                .cloned()
+                .unwrap_or_default();
 
             for (index, stop) in timetable.train_timetable_object.iter().enumerate() {
                 if let Some(station) = &stop.arrival_station {
@@ -543,5 +579,147 @@ impl TimetableService {
             .get(station_id)
             .cloned()
             .unwrap_or_else(|| station_id.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn service_from_records(records: Vec<TimetableRecord>) -> TimetableService {
+        let client = Client::builder().build().expect("client");
+        let mut service = TimetableService {
+            data: records,
+            indexed_data: IndexedData::default(),
+            localization: Localization {
+                railways: HashMap::from([(
+                    "odpt.Railway:Toei.Asakusa".to_string(),
+                    "都営浅草線".to_string(),
+                )]),
+                stations: HashMap::from([
+                    (
+                        "odpt.Station:Toei.Asakusa.Sengakuji".to_string(),
+                        "泉岳寺".to_string(),
+                    ),
+                    (
+                        "odpt.Station:Toei.Asakusa.Daimon".to_string(),
+                        "大門".to_string(),
+                    ),
+                    (
+                        "odpt.Station:Toei.Asakusa.NishiMagome".to_string(),
+                        "西馬込".to_string(),
+                    ),
+                ]),
+            },
+            client,
+        };
+        service.build_indexes();
+        service
+    }
+
+    fn sample_record(train_number: &str, arrival_time: &str) -> TimetableRecord {
+        serde_json::from_value(json!({
+            "odpt:railway": "odpt.Railway:Toei.Asakusa",
+            "odpt:calendar": "odpt.Calendar:Weekday",
+            "odpt:railDirection": "odpt.RailDirection:Southbound",
+            "odpt:trainNumber": train_number,
+            "odpt:originStation": ["odpt.Station:Toei.Asakusa.Sengakuji"],
+            "odpt:destinationStation": ["odpt.Station:Toei.Asakusa.NishiMagome"],
+            "odpt:trainTimetableObject": [
+                {
+                    "odpt:departureStation": "odpt.Station:Toei.Asakusa.Sengakuji",
+                    "odpt:departureTime": "07:00"
+                },
+                {
+                    "odpt:arrivalStation": "odpt.Station:Toei.Asakusa.Daimon",
+                    "odpt:arrivalTime": arrival_time,
+                    "odpt:departureTime": "07:11",
+                    "odpt:platformNumber": "1"
+                }
+            ]
+        }))
+        .expect("sample record")
+    }
+
+    #[test]
+    fn builds_indexes_and_localized_queries() {
+        let service = service_from_records(vec![
+            sample_record("726T", "07:10"),
+            sample_record("730T", "07:30"),
+        ]);
+
+        assert_eq!(
+            service.get_railways_localized(),
+            vec![LocalizedItem {
+                id: "odpt.Railway:Toei.Asakusa".to_string(),
+                name_ja: "都営浅草線".to_string(),
+            }]
+        );
+        assert_eq!(
+            service.get_calendars("odpt.Railway:Toei.Asakusa"),
+            vec!["odpt.Calendar:Weekday".to_string()]
+        );
+        assert_eq!(
+            service.get_directions("odpt.Railway:Toei.Asakusa", "odpt.Calendar:Weekday"),
+            vec!["odpt.RailDirection:Southbound".to_string()]
+        );
+        assert_eq!(
+            service.get_destination_station_localized(
+                "odpt.Railway:Toei.Asakusa",
+                "odpt.Calendar:Weekday",
+                "odpt.RailDirection:Southbound"
+            ),
+            Some(LocalizedItem {
+                id: "odpt.Station:Toei.Asakusa.NishiMagome".to_string(),
+                name_ja: "西馬込".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn returns_station_trains_and_timetable() {
+        let service = service_from_records(vec![
+            sample_record("730T", "07:30"),
+            sample_record("726T", "07:10"),
+        ]);
+
+        let trains = service.get_trains_arriving_at_station(
+            "odpt.Station:Toei.Asakusa.Daimon",
+            Some("odpt.Railway:Toei.Asakusa"),
+            Some("odpt.Calendar:Weekday"),
+            Some("odpt.RailDirection:Southbound"),
+        );
+        assert_eq!(trains.len(), 2);
+        assert_eq!(trains[0].train_number, "726T");
+        assert_eq!(trains[0].arrival_time, "07:10");
+        assert_eq!(trains[0].destination_name_ja, "西馬込");
+
+        let stations = service.get_stations(
+            "odpt.Railway:Toei.Asakusa",
+            "odpt.Calendar:Weekday",
+            "odpt.RailDirection:Southbound",
+        );
+        assert_eq!(
+            stations,
+            vec![
+                "odpt.Station:Toei.Asakusa.Sengakuji".to_string(),
+                "odpt.Station:Toei.Asakusa.Daimon".to_string()
+            ]
+        );
+
+        assert_eq!(
+            service.get_train_arrival_time_at_station("726T", "odpt.Station:Toei.Asakusa.Daimon"),
+            Some("07:10".to_string())
+        );
+
+        let timetable = service.get_train_timetable("726T").expect("timetable");
+        assert_eq!(timetable.origin_station_name_ja, "泉岳寺");
+        assert_eq!(timetable.destination_station_name_ja, "西馬込");
+        assert_eq!(timetable.stops.len(), 2);
+        assert_eq!(
+            timetable.stops[1].station,
+            "odpt.Station:Toei.Asakusa.Daimon"
+        );
     }
 }

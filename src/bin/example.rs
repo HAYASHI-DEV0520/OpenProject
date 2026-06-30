@@ -49,7 +49,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let first_station = stations.first().cloned().unwrap_or_default();
     println!("\n=== {first_station} での到着列車 ===");
-    let trains_at_station = timetable.get_trains_arriving_at_station(&first_station, None, None, None);
+    let trains_at_station =
+        timetable.get_trains_arriving_at_station(&first_station, None, None, None);
     for train in trains_at_station.iter().take(5) {
         println!(
             "  列車 {}: {} ({} {})",
@@ -60,7 +61,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  ... 他 {}本", trains_at_station.len() - 5);
     }
 
-    if let Some(first_train_number) = trains_at_station.first().map(|train| train.train_number.clone()) {
+    if let Some(first_train_number) = trains_at_station
+        .first()
+        .map(|train| train.train_number.clone())
+    {
         println!("\n=== 列車 {first_train_number} の全ルート ===");
         if let Some(train_timetable) = timetable.get_train_timetable(&first_train_number) {
             println!("線路: {}", train_timetable.railway);

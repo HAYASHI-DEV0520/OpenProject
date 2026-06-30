@@ -81,7 +81,9 @@ async fn shutdown_signal() {
 }
 
 async fn index() -> impl IntoResponse {
-    match tokio::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app/public/index.html")).await {
+    match tokio::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app/public/index.html"))
+        .await
+    {
         Ok(contents) => (
             StatusCode::OK,
             [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
@@ -107,70 +109,125 @@ async fn calendars(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_calendars(params.get("railway").map(String::as_str).unwrap_or_default()))
+    Json(
+        state.timetable.get_calendars(
+            params
+                .get("railway")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn directions(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_directions(
-        params.get("railway").map(String::as_str).unwrap_or_default(),
-        params.get("calendar").map(String::as_str).unwrap_or_default(),
-    ))
+    Json(
+        state.timetable.get_directions(
+            params
+                .get("railway")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("calendar")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn destination(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_destination_station_localized(
-        params.get("railway").map(String::as_str).unwrap_or_default(),
-        params.get("calendar").map(String::as_str).unwrap_or_default(),
-        params.get("direction").map(String::as_str).unwrap_or_default(),
-    ))
+    Json(
+        state.timetable.get_destination_station_localized(
+            params
+                .get("railway")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("calendar")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("direction")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn stations(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_stations_localized(
-        params.get("railway").map(String::as_str).unwrap_or_default(),
-        params.get("calendar").map(String::as_str).unwrap_or_default(),
-        params.get("direction").map(String::as_str).unwrap_or_default(),
-    ))
+    Json(
+        state.timetable.get_stations_localized(
+            params
+                .get("railway")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("calendar")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("direction")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn trains(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_trains_arriving_at_station(
-        params.get("station").map(String::as_str).unwrap_or_default(),
-        params.get("railway").map(String::as_str),
-        params.get("calendar").map(String::as_str),
-        params.get("direction").map(String::as_str),
-    ))
+    Json(
+        state.timetable.get_trains_arriving_at_station(
+            params
+                .get("station")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params.get("railway").map(String::as_str),
+            params.get("calendar").map(String::as_str),
+            params.get("direction").map(String::as_str),
+        ),
+    )
 }
 
 async fn train(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_train_timetable(
-        params.get("trainNumber").map(String::as_str).unwrap_or_default(),
-    ))
+    Json(
+        state.timetable.get_train_timetable(
+            params
+                .get("trainNumber")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn train_arrival(
     State(state): State<AppState>,
     Query(params): Query<std::collections::HashMap<String, String>>,
 ) -> impl IntoResponse {
-    Json(state.timetable.get_train_arrival_time_at_station(
-        params.get("trainNumber").map(String::as_str).unwrap_or_default(),
-        params.get("station").map(String::as_str).unwrap_or_default(),
-    ))
+    Json(
+        state.timetable.get_train_arrival_time_at_station(
+            params
+                .get("trainNumber")
+                .map(String::as_str)
+                .unwrap_or_default(),
+            params
+                .get("station")
+                .map(String::as_str)
+                .unwrap_or_default(),
+        ),
+    )
 }
 
 async fn api_not_found(Path(_): Path<String>) -> impl IntoResponse {
