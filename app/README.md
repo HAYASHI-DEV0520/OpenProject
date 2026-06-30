@@ -2,16 +2,12 @@
 
 ODPT API を使って都営交通の列車時刻表を取得し、
 
-- Node.js サービスとして検索 API を提供
+- Rust サービスとして検索 API を提供
 - ブラウザ画面で乗車駅・列車・降車駅を選んで到着時刻を確認
 
 できるサンプルアプリです。
 
 ## セットアップ
-
-```bash
-npm install
-```
 
 `.env` ファイルを作成して API キーを設定してください。
 
@@ -22,7 +18,7 @@ ODPT_CONSUMER_KEY=your_consumer_key_here
 ## 起動方法
 
 ```bash
-npm run serve
+cargo run
 ```
 
 起動後、ブラウザで `http://localhost:3000` を開いてください。
@@ -34,27 +30,29 @@ npm run serve
 
 `ODPT_CONSUMER_KEY` が未設定の場合、起動時にエラーになります。
 
-## 利用可能なスクリプト
+## 利用可能なコマンド
 
-- `npm run serve` / `npm start`: サーバー起動
-- `npm test`: `example.js` を実行
+- `cargo run`: サーバー起動
+- `cargo run --bin example`: CLI の動作例を実行
+- `cargo test`: Rust テスト実行
 
 ## ディレクトリ構成
 
 ```text
 .
 ├── app/
-│   ├── server.js          # HTTPサーバーとAPIエンドポイント
-│   ├── timetableService.js # 時刻表データ読み込み・インデックス化・検索ロジック
-│   ├── example.js         # サービス利用例
-│   ├── public/
-│   │   ├── index.html     # フロントエンドUI
-│   │   ├── app.js         # 画面ロジック（選択フロー制御）
-│   │   ├── api.js         # APIクライアント
-│   │   ├── ui.js          # UI更新ヘルパー
-│   │   ├── pi.js          # Raspberry Pi 連携
-│   │   └── WEB_APP.md     # 画面仕様メモ
-└── package.json
+│   └── public/
+│       ├── index.html     # フロントエンドUI
+│       ├── app.js         # 画面ロジック（選択フロー制御）
+│       ├── api.js         # APIクライアント
+│       ├── ui.js          # UI更新ヘルパー
+│       ├── pi.js          # Raspberry Pi 連携
+│       └── WEB_APP.md     # 画面仕様メモ
+├── src/
+│   ├── main.rs            # HTTPサーバーとAPIエンドポイント
+│   ├── lib.rs             # 時刻表データ読み込み・インデックス化・検索ロジック
+│   └── bin/example.rs     # サービス利用例
+└── Cargo.toml
 ```
 
 ## サーバー API
@@ -147,7 +145,7 @@ npm run serve
 ## TimetableService の主要メソッド
 
 - `TimetableService.getDefaultApiUrls()`
-- `TimetableService.create(source)`
+- `TimetableService.create(sources)`
 - `getRailways()` / `getRailwaysLocalized()`
 - `getCalendars(railway)`
 - `getDirections(railway, calendar)`
@@ -160,4 +158,4 @@ npm run serve
 ## 補足
 
 - Web UI の操作仕様は `public/WEB_APP.md` を参照してください。
-- 実装例は `example.js` を参照してください。
+- 実装例は `src/bin/example.rs` を参照してください。
