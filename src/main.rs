@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timetable = Arc::new(TimetableService::create(api_urls).await?);
     let state = AppState { timetable };
 
-    let public_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app/public");
+    let public_dir = PathBuf::from("app/public");
     let serve_dir = ServeDir::new(public_dir);
 
     let app = Router::new()
