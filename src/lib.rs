@@ -534,7 +534,9 @@ impl TimetableService {
                 .unwrap_or_default();
 
             for (index, stop) in timetable.train_timetable_object.iter().enumerate() {
-                if let Some(station) = &stop.arrival_station {
+                if let (Some(station), Some(arrival_time)) =
+                    (&stop.arrival_station, &stop.arrival_time)
+                {
                     station_map
                         .entry(station.clone())
                         .or_default()
@@ -544,7 +546,7 @@ impl TimetableService {
                             direction: timetable.rail_direction.clone(),
                             train_number: timetable.train_number.clone(),
                             destination: destination.clone(),
-                            arrival_time: stop.arrival_time.clone().unwrap_or_default(),
+                            arrival_time: arrival_time.clone(),
                             stop_index: index,
                             railway_name_ja: self.get_railway_name_ja(&timetable.railway),
                             destination_name_ja: self.get_station_name_ja(&destination),
