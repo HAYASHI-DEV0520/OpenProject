@@ -4,4 +4,4 @@ WORKDIR /app
 
 COPY . .
 
-CMD ["CMD ["/app/target/release/timetable-reader"]"]
+CMD ["/app/target/release/timetable-reader"]
