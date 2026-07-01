@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
-    println!("Web server running at http://localhost:{port}");
+    println!("Web server running at http://0.0.0.0:{port}");
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
