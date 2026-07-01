@@ -3,6 +3,9 @@ name: Deploy to Elastic Beanstalk
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
+
 
 env:
   AWS_REGION: ap-northeast-1
