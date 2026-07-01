@@ -17,11 +17,26 @@ ODPT_CONSUMER_KEY=your_consumer_key_here
 
 ## 起動方法
 
+### ローカル（Cargo）
+
 ```bash
 cargo run
 ```
 
 起動後、ブラウザで `http://localhost:3000` を開いてください。
+
+### Docker
+
+```bash
+docker build -t timetable-reader .
+docker run -p 3000:3000 timetable-reader
+```
+
+Dockerで起動する場合、環境変数を渡してください。
+
+```bash
+docker run -p 3000:3000 -e ODPT_CONSUMER_KEY=your_key timetable-reader
+```
 
 ## 環境変数
 
@@ -29,6 +44,19 @@ cargo run
 - `ODPT_CONSUMER_KEY`: ODPT API のコンシューマーキー
 
 `ODPT_CONSUMER_KEY` が未設定の場合、起動時にエラーになります。
+
+## デプロイ
+
+### Elastic Beanstalk（GitHub Actions）
+
+`master` ブランチへのプッシュで `.github/workflows/deploy-to-eb.yml` が自動実行され、AWS Elastic Beanstalk にデプロイされます。
+
+事前に以下の GitHub Secrets を設定してください：
+
+| シークレット名 | 内容 |
+|---|---|
+| `AWS_ROLE_TO_ASSUME` | OIDC 認証用 IAM ロール ARN |
+| `ODPT_CONSUMER_KEY` | ODPT API のコンシューマーキー |
 
 ## 利用可能なコマンド
 
@@ -40,6 +68,9 @@ cargo run
 
 ```text
 .
+├── .github/
+│   └── workflows/
+│       └── deploy-to-eb.yml  # Elastic Beanstalk 自動デプロイ
 ├── app/
 │   └── public/
 │       ├── index.html     # フロントエンドUI
@@ -52,7 +83,9 @@ cargo run
 │   ├── main.rs            # HTTPサーバーとAPIエンドポイント
 │   ├── lib.rs             # 時刻表データ読み込み・インデックス化・検索ロジック
 │   └── bin/example.rs     # サービス利用例
-└── Cargo.toml
+├── Cargo.toml
+├── Dockerfile
+└── .dockerignore
 ```
 
 ## サーバー API
