@@ -286,7 +286,7 @@ impl TimetableService {
     }
 
     pub fn get_stations(&self, railway: &str, calendar: &str, direction: &str) -> Vec<String> {
-        let matches = self
+        let Some(first_timetable) = self
             .data
             .iter()
             .filter(|item| {
@@ -294,17 +294,11 @@ impl TimetableService {
                     && item.calendar == calendar
                     && item.rail_direction == direction
             })
-            .collect::<Vec<_>>();
-
-        if matches.is_empty() {
+            .max_by_key(|item| item.train_timetable_object.len())
+        else {
             eprintln!("Direction not found: {railway} {calendar} {direction}");
             return Vec::new();
-        }
-
-        let first_timetable = matches
-            .into_iter()
-            .max_by_key(|item| item.train_timetable_object.len())
-            .expect("matches should not be empty");
+        };
 
         let mut stations = Vec::new();
         for stop in &first_timetable.train_timetable_object {
