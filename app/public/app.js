@@ -8,38 +8,37 @@ let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
 
-
 function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[ch]));
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[ch]));
 }
 
 function normalizeLocalizedItem(item) {
-  if (typeof item === 'string') {
-    const safe = escapeHtml(item);
-    return { id: safe, nameJa: safe };
-  }
+    if (typeof item === 'string') {
+        const safe = escapeHtml(item);
+        return { id: safe, nameJa: safe };
+    }
 
-  const id = item?.id ?? '';
-  const nameJa = item?.nameJa ?? item?.id ?? '';
+    const id = item?.id ?? '';
+    const nameJa = item?.nameJa ?? item?.id ?? '';
 
-  return {
-    id: escapeHtml(id),
-    nameJa: escapeHtml(nameJa)
-  };
+    return {
+        id: escapeHtml(id),
+        nameJa: escapeHtml(nameJa)
+    };
 }
 
 async function fetchJson(url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}`);
-  }
-  return res.json();
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`${res.status} ${res.statusText}`);
+    }
+    return res.json();
 }
 
 async function updateStatus() {
@@ -115,8 +114,6 @@ async function loadTrainsForBoardingStation() {
         return;
     }
 
-
-
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
     ui.setBoardingTrains(trains, trainNumber => {
@@ -187,6 +184,8 @@ async function main() {
         ui.setDebug("[relay server receive]" + msg.data);
     });
     ui.appendStatus("web socketリレーサービスに接続しました。");
+
+
 }
 
 window.addEventListener("load", main);
