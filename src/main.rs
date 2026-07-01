@@ -81,9 +81,7 @@ async fn shutdown_signal() {
 }
 
 async fn index() -> impl IntoResponse {
-    match tokio::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("app/public/index.html"))
-        .await
-    {
+    match tokio::fs::read("app/public/index.html").await {
         Ok(contents) => (
             StatusCode::OK,
             [(axum::http::header::CONTENT_TYPE, "text/html; charset=utf-8")],
