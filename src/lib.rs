@@ -267,23 +267,20 @@ impl TimetableService {
         calendar: &str,
         direction: &str,
     ) -> Option<String> {
-        let matches = self
+        let Some(first) = self
             .data
             .iter()
-            .filter(|item| {
+            .find(|item| {
                 item.railway == railway
                     && item.calendar == calendar
                     && item.rail_direction == direction
             })
-            .collect::<Vec<_>>();
-
-        if matches.is_empty() {
+        else {
             eprintln!("Direction not found: {railway} {calendar} {direction}");
             return None;
-        }
+        };
 
-        matches[0].destination_station.first().cloned()
-    }
+        first.destination_station.first().cloned()
 
     pub fn get_stations(&self, railway: &str, calendar: &str, direction: &str) -> Vec<String> {
         let Some(first_timetable) = self
