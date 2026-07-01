@@ -1,4 +1,4 @@
-name: Deploy to Elastic Beanstalk
+name: Build, Push (ECR) and Deploy (EB)
 
 on:
   push:
