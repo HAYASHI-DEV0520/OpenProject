@@ -7,7 +7,7 @@ on:
 env:
   AWS_REGION: ap-northeast-1
   APPLICATION_NAME: railway-timer
-  ENVIRONMENT_NAME: Railway-timer-env-1
+  ENVIRONMENT_NAME: Railway-timer-env
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
 
       - name: Create deployment package
         run: |
-          zip -r app.zip * -x ".*"
+          zip -r app.zip * -x ".*" -x "target/*"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4 # v4
@@ -35,7 +35,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           application-name: ${{ env.APPLICATION_NAME }}
           environment-name: ${{ env.ENVIRONMENT_NAME }}
-          version-label: nodejs-${{ github.sha }}
+          version-label: rust-${{ github.sha }}
           deployment-package-path: app.zip
           option-settings: |
             [
