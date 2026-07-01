@@ -281,6 +281,7 @@ impl TimetableService {
         };
 
         first.destination_station.first().cloned()
+    }
 
     pub fn get_stations(&self, railway: &str, calendar: &str, direction: &str) -> Vec<String> {
         let Some(first_timetable) = self
