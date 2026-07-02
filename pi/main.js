@@ -7,7 +7,7 @@ import NPIX from "@chirimen/neopixel-i2c";
 const CHANNEL_NAME = "op2026-TTE";　// resel server channel名
 
 // 発光設定  
-const DELAY_SECONDS = 3;          // タイマー秒数  
+// const DELAY_SECONDS = 3;          // タイマー秒数  
 const NEOPIXEL_COUNT = 7;         // LEDの個数  
 const LONG_PRESS_DURATION = 2000; // 長押し判定時間（ミリ秒）  
 const FADE_DURATION = 30000;      // フェード時間（ミリ秒）  
@@ -23,9 +23,12 @@ let longPressTimerId = null;  // 長押し検出用タイマーID
 let buttonPressStartTime = 0; // ボタン押下開始時刻  
 let blinkIntervalId = null;   // 点滅用インターバルID  
 
+let dryRun = false;
+
 let channel;
 
-const sleep = msec => new Promise(resolve => setTimeout(resolve, msec));  
+
+const sleep =  msec => new Promise(resolve => setTimeout(resolve, msec));  
 
 // ╔═════════════════════════════════════════════════════════╗
 // ║                   ボタン/neopixel制御                   ║
@@ -62,16 +65,16 @@ async function handleButtonPress(ev) {
         const pressDuration = Date.now() - buttonPressStartTime;  
 
         // 短押し（長押しでない）の場合のみ処理  
-        if (pressDuration < LONG_PRESS_DURATION) {  
-            await handleShortPress();  
-        }  
+        // if (pressDuration < LONG_PRESS_DURATION) {  
+        //     await startNewTimer(3);  
+        // }  
     }  
 }  
 
-async function handleShortPress() {  
+async function startNewTimer(delay_seconds) {
     // タイマー動作中または点灯中は短押し無効  
     if (isTimerRunning || isLit) {  
-        console.log("動作中です。短押しは無効です。");  
+        console.log("タイマーは無効です");  
         return;  
     }  
 
@@ -83,9 +86,9 @@ async function handleShortPress() {
         isTimerRunning = false;  
         isLit = true;  
         console.log("タイマー終了：LED点灯シーケンス開始");  
-        await startLightSequence();  
-    }, DELAY_SECONDS * 1000);  
-}  
+        if (!dryRun) await startLightSequence();  
+    }, delay_seconds * 1000);  
+}
 
 async function startLightSequence() {  
     // フェーズ1: 30秒で (0,0,0) → (255,120,20)  
@@ -155,31 +158,73 @@ async function connect() {
     let relay = RelayServer("chirimentest", "chirimenSocket", nodeWebSocketLib, "https://chirimen.org");
     channel = await relay.subscribe(CHANNEL_NAME);
     console.log("web socketリレーサービスに接続しました");
-    channel.onmessage = onChannelMessage
+    channel.onmessage = msg => {
+        if (msg === null) return;
+
+        let data = msg.data;
+
+        console.log("[receive]: data");
+        if (typeof msg === "object" 
+            && "type" in data
+            && "content" in data
+            && data.type.startsWith("pi."))
+            onMessageObject(data); 
+    }
 }
 
-function onChannelMessage(msg) {
-
-    if ("type" in msg)
-    console.log(msg.data);
+function onMessageObject(msgData) {
+    const type = msgData.type.slice(3);
+    switch (type) {
+        case "setRideTime": {
+            const { boardingTime, alightingTime } = msgData.content;
+            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            return;
+        }
+    }
 }
 
 // ╔═════════════════════════════════════════════════════════╗
 // ║                          main                           ║
 // ╚═════════════════════════════════════════════════════════╝
 
-async function main() {  
-    // I2C初期化（Neopixel用）  
-    const i2cAccess = await requestI2CAccess();  
-    const port = i2cAccess.ports.get(1);  
-    npix = new NPIX(port, 0x41);  
-    await npix.init(NEOPIXEL_COUNT);  
 
-    // GPIO初期化（ボタン用）  
-    const gpioAccess = await requestGPIOAccess();  
-    const buttonPort = gpioAccess.ports.get(5);  
-    await buttonPort.export("in");  
-    buttonPort.onchange = handleButtonPress;  
+async function onSetRideTime(boardingTime, alightingTime) {
+    if (boardingTime > alightingTime) 
+        throw new Error("onSetRideTime(): boardingTime > alightingTime");
+
+    let now = new Date();
+
+    if (now > alightingTime) {
+        console.log("onSetRideTime(): もう降車時間を過ぎています");
+        return;
+    }
+    if (now < boardingTime) {
+        console.log(`onSetRideTime(): 乗車時間まで待機: ${(boardingTime - now) / 1000} 秒`);
+        await sleep(boardingTime - now);
+    }
+
+    now = new Date();
+    await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
+}
+
+async function main() {  
+    if (process.argv.includes("--dry-run")) {
+        dryRun = true;
+    }
+
+    if (!dryRun) {
+        // I2C初期化（Neopixel用）  
+        const i2cAccess = await requestI2CAccess();  
+        const port = i2cAccess.ports.get(1);  
+        npix = new NPIX(port, 0x41);  
+        await npix.init(NEOPIXEL_COUNT);  
+
+        // GPIO初期化（ボタン用）  
+        const gpioAccess = await requestGPIOAccess();  
+        const buttonPort = gpioAccess.ports.get(5);  
+        await buttonPort.export("in");  
+        buttonPort.onchange = handleButtonPress;  
+    }
 
     // channelに接続
     connect();

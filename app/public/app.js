@@ -3,7 +3,6 @@ import * as ui from './ui.js';
 import * as pi from './pi.js';
 import * as calendar from './calendar.js';
 
-let boardingStations = [];
 let selectedBoardingStation = null;
 let selectedTrain = null;
 let selectedAlightingStation = null;
@@ -36,8 +35,8 @@ function normalizeLocalizedItem(item) {
     };
 }
 
-// 手動でローカライズし、{id, nameJa}にする
-// マッチしてない場合は元のIDのまま
+// @brief 手動でカレンダー名をローカライズする
+// @returns { id, nameJa } 
 function localizeCalendar(calendarID) {
     let localizeCalendarID = (id) => {
         const prefix = 'odpt.Calendar:';
@@ -188,7 +187,7 @@ async function confirmRide() {
         boardingTime,
         alightingStation: stationNameById(alightingStation),
         alightingTime,
-        onSendRide: onSendRide
+        onSendRide: () => onSendRide(boardingTime, alightingTime)
     });
 }
 
@@ -233,8 +232,27 @@ ui.onLoadStationsClick(async () => {
     }
 });
 
-async function onSendRide() {
-    pi.sendMessage()
+async function onSendRide(boardingTime, alightingTime) {
+    const DateOf = (hhmm) => {
+        const now = new Date();
+
+        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+        const yyyy = jst.getUTCFullYear();
+        const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
+        const dd = String(jst.getUTCDate()).padStart(2, "0");
+
+        return new Date(`${yyyy}-${mm}-${dd}T${hhmm}:00+09:00`);
+    };
+
+    pi.sendMessage({
+        type: "pi.setRideTime",
+        content: {
+            boardingTime: DateOf(boardingTime),
+            alightingTime: DateOf(alightingTime),
+        }
+    })
+    ui.appendStatus("乗車時間を発信しました。")
 }
 
 async function main() {
