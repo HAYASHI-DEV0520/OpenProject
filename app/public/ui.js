@@ -2,6 +2,7 @@ const elements = {
     status: document.getElementById('status'),
     statusLog: document.getElementById('statusLog'),
     railway: document.getElementById('railway'),
+    conditionControls: document.getElementById('conditionControls'),
     calendar: document.getElementById('calendar'),
     direction: document.getElementById('direction'),
     loadStations: document.getElementById('loadStations'),
@@ -94,6 +95,10 @@ export function selectCalendar(index) {
 
 export function resetCalendars() {
     setSelectOptions(elements.calendar, 'カレンダーを選択', []);
+}
+
+export function setConditionControlsVisible(visible) {
+    elements.conditionControls.hidden = !visible;
 }
 
 export function setDirections(directions) {

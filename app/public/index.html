@@ -16,6 +16,7 @@
     button:disabled { background: #a5b4fc; cursor: not-allowed; }
     pre { white-space: pre-wrap; word-break: break-word; }
     .row { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+    .condition-controls[hidden] { display: none; }
     .status-panel { margin-top: 1rem; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
     .status-panel summary { display: flex; gap: 0.75rem; align-items: baseline; padding: 0.75rem 0.875rem; cursor: pointer; font-size: 0.875rem; color: #475569; user-select: none; }
     .status-panel summary:hover { background: #f8fafc; }
@@ -47,18 +48,20 @@
       </details>
     </div>
 
-    <div class="card row">
+    <div class="card">
       <div>
         <label for="railway">線路</label>
         <select id="railway"></select>
       </div>
-      <div>
-        <label for="calendar">カレンダー</label>
-        <select id="calendar"></select>
-      </div>
-      <div>
-        <label for="direction">方向</label>
-        <select id="direction"></select>
+      <div id="conditionControls" class="row condition-controls" hidden>
+        <div>
+          <label for="calendar">カレンダー</label>
+          <select id="calendar"></select>
+        </div>
+        <div>
+          <label for="direction">方向</label>
+          <select id="direction"></select>
+        </div>
       </div>
     </div>
 

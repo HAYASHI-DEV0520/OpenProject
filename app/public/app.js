@@ -182,6 +182,10 @@ function matchIndexFromCalendars(dateType, calendars) {
 ui.onRailwayChange(async () => {
     ui.resetCalendars();
     ui.resetDirections();
+    const { railway } = ui.getSelectedConditions();
+    ui.setConditionControlsVisible(Boolean(railway));
+    if (!railway) return;
+
     let calendars = await loadCalendars();
     console.log(JSON.stringify(calendars));
 
@@ -213,6 +217,7 @@ async function main() {
     await updateStatus();
     ui.resetCalendars();
     ui.resetDirections();
+    ui.setConditionControlsVisible(false);
     await loadRailways();
 
     await pi.connect((msg) => {
