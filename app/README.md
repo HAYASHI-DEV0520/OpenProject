@@ -38,12 +38,6 @@ Dockerで起動する場合、環境変数を渡してください。
 docker run -p 3000:3000 -e ODPT_CONSUMER_KEY=your_key timetable-reader
 ```
 
-または
-
-```bash
-docker run -p 3000:3000 --env-file .env timetable-reader
-```
-
 ## 環境変数
 
 - `PORT`: Web サーバーの待ち受けポート（デフォルト: `3000`）
