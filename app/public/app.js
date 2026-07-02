@@ -9,17 +9,17 @@ let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
 
-function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (ch) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[ch]));
-}
-
 function normalizeLocalizedItem(item) {
+    let escapeHtml = (value) => {
+        return String(value).replace(/[&<>"']/g, (ch) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[ch]));
+    }
+
     if (typeof item === 'string') {
         const safe = escapeHtml(item);
         return { id: safe, nameJa: safe };
@@ -34,8 +34,23 @@ function normalizeLocalizedItem(item) {
     };
 }
 
-function localizeCalendar(calendar) {
-    
+// 手動でローカライズ　マッチしてない場合は元のIDのまま
+function localizeCalendar(calendarID) {
+    let localizeCalendarID = (id) => {
+        const prefix = 'odpt.Calendar:';
+        switch(id) {
+            case `${prefix}Weekday`: return '平日';
+            case `${prefix}Saturday`: return '土曜';
+            case `${prefix}Holiday`: return '日曜';
+            case `${prefix}SaturdayHoliday`: return '土曜/日曜';
+            default: return id;
+        }
+    };
+
+    return {
+        id: calendarID,
+        nameJa: localizeCalendarID(calendarID)
+    };
 }
 
 async function updateStatus() {
@@ -54,7 +69,11 @@ async function loadRailways() {
 async function loadCalendars() {
     const { railway } = ui.getSelectedConditions();
     if (!railway) return;
-    let calendars = (await api.getCalendars(railway)).map(normalizeLocalizedItem);
+    let calendars = (await api.getCalendars(railway))
+        .map(localizeCalendar)
+        .map(normalizeLocalizedItem);
+
+    console.log(calendars);
     ui.setCalendars(calendars);
     return calendars;
 }
@@ -151,11 +170,11 @@ async function confirmRide() {
     });
 }
 
-function matchIndexFromCalendarType(dateType, calendars) {
+function matchIndexFromCalendars(dateType, calendars) {
     for (const [i, calendar] of calendars.entries()) {
         if (calendar.id.includes(dateType)) return i;
     }
-    throw new Error("calendar not found");
+    throw new Error("unrecognized calendar");
 }
 
 ui.onRailwayChange(async () => {
@@ -166,7 +185,7 @@ ui.onRailwayChange(async () => {
 
     // 日にちによってカレンダーを選択
     let dateType = calendar.getCurrentCalendarType();
-    let index = matchIndexFromCalendarType(dateType, calendars);
+    let index = matchIndexFromCalendars(dateType, calendars);
     ui.selectCalendar(index);
 
     console.log(dateType);
