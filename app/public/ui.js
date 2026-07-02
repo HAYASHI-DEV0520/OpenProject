@@ -132,7 +132,7 @@ export function setLoadStationsDisabled(disabled) {
     elements.loadStations.disabled = disabled;
 }
 
-export function renderStepControls({ stations, destination, onBoardingStationChange, onAlightingStationChange, onConfirmRide }) {
+export function renderStepControls({ stations, onBoardingStationChange, onAlightingStationChange }) {
     elements.stepControls.innerHTML = `
 <div class="row">
     <div>
@@ -148,14 +148,12 @@ export function renderStepControls({ stations, destination, onBoardingStationCha
         <select id="trainByTime"></select>
     </div>
 </div>
-<button id="confirmRide">乗車列車を確定</button>
 <div id="rideResult"></div>
 `;
 
     const boardingStation = document.getElementById('boardingStation');
     const trainByTime = document.getElementById('trainByTime');
     const alightingStation = document.getElementById('alightingStation');
-    const confirmRide = document.getElementById('confirmRide');
 
     setSelectOptions(boardingStation, '乗車駅を選択', stations);
     setSelectOptions(trainByTime, '列車を選択', []);
@@ -163,7 +161,6 @@ export function renderStepControls({ stations, destination, onBoardingStationCha
 
     boardingStation.addEventListener('change', event => onBoardingStationChange(event.target.value));
     alightingStation.addEventListener('change', event => onAlightingStationChange(event.target.value));
-    confirmRide.addEventListener('click', () => onConfirmRide(destination));
 }
 
 export function setBoardingTrains(trains, onTrainChange) {
@@ -230,7 +227,14 @@ export function setRideResult(message) {
     }
 }
 
-export function setRideDetails({ boardingStation, trainNumber, boardingTime, alightingStation, alightingTime }) {
+export function setRideDetails({
+    boardingStation,
+    trainNumber,
+    boardingTime,
+    alightingStation,
+    alightingTime,
+    onSendRide,
+}) {
     const rideResult = document.getElementById('rideResult');
     if (!rideResult) return;
 
@@ -250,6 +254,14 @@ export function setRideDetails({ boardingStation, trainNumber, boardingTime, ali
     const estimatedTime = document.createElement('h1');
     estimatedTime.textContent = `推定降車時間: ${alightingTime}`;
     rideResult.append(estimatedTime);
+
+    const sendRide = document.createElement('button');
+    sendRide.type = 'button';
+    sendRide.textContent = '発信';
+    if (onSendRide) {
+        sendRide.addEventListener('click', onSendRide);
+    }
+    rideResult.append(sendRide);
 }
 
 export function onRailwayChange(handler) {

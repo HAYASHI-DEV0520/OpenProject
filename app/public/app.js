@@ -109,7 +109,6 @@ async function loadStations() {
 
     ui.renderStepControls({
         stations: currentStations,
-        destination,
         onBoardingStationChange: async station => {
             selectedBoardingStation = station;
             selectedTrain = null;
@@ -119,8 +118,7 @@ async function loadStations() {
         onAlightingStationChange: async station => {
             selectedAlightingStation = station;
             await maybeConfirmRide();
-        },
-        onConfirmRide: confirmRide
+        }
     });
 
     ui.appendDebug({ currentStations, destination });
@@ -189,7 +187,8 @@ async function confirmRide() {
         trainNumber,
         boardingTime,
         alightingStation: stationNameById(alightingStation),
-        alightingTime
+        alightingTime,
+        onSendRide: onSendRide
     });
 }
 
@@ -233,6 +232,10 @@ ui.onLoadStationsClick(async () => {
         ui.setLoadStationsDisabled(false);
     }
 });
+
+async function onSendRide() {
+
+}
 
 async function main() {
     await updateStatus();
