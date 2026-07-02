@@ -159,6 +159,8 @@ async function connect() {
 }
 
 function onChannelMessage(msg) {
+
+    if ("type" in msg)
     console.log(msg.data);
 }
 
@@ -182,7 +184,7 @@ async function main() {
     // channelに接続
     connect();
 
-    console.log("初期化完了。");  
+    console.log("初期化完了");  
 }
 
 main();
