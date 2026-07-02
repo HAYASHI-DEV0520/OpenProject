@@ -87,9 +87,8 @@ export function setCalendars(calendars) {
     setSelectOptions(elements.calendar, 'カレンダーを選択', calendars);
 }
 
-// indexから選択 デフォルトの選択肢を無視する
 export function selectCalendar(index) {
-    elements.calendar.selectedIndex = index + 1;
+    elements.calendar.selectedIndex = index;
     elements.calendar.dispatchEvent(new Event("change"));
 }
 
@@ -141,12 +140,12 @@ export function renderStepControls({ stations, destination, onBoardingStationCha
         <select id="boardingStation"></select>
     </div>
     <div>
-        <label for="trainByTime">乗車時間で列車を選択</label>
-        <select id="trainByTime"></select>
-    </div>
-    <div>
         <label for="alightingStation">降車駅</label>
         <select id="alightingStation"></select>
+    </div>
+    <div>
+        <label for="trainByTime">乗車時間で列車を選択</label>
+        <select id="trainByTime"></select>
     </div>
 </div>
 <button id="confirmRide">乗車列車を確定</button>

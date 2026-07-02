@@ -8,6 +8,8 @@ let selectedBoardingStation = null;
 let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
+let confirmRideRequestId = 0;
+let confirmRideTimer = null;
 
 function normalizeLocalizedItem(item) {
     let escapeHtml = (value) => {
@@ -114,8 +116,9 @@ async function loadStations() {
             await loadTrainsForBoardingStation();
             ui.autoSelectTrain();
         },
-        onAlightingStationChange: station => {
+        onAlightingStationChange: async station => {
             selectedAlightingStation = station;
+            await maybeConfirmRide();
         },
         onConfirmRide: confirmRide
     });
@@ -135,9 +138,21 @@ async function loadTrainsForBoardingStation() {
 
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
-    ui.setBoardingTrains(trains, trainNumber => {
+    ui.setBoardingTrains(trains, async trainNumber => {
         selectedTrain = trainNumber;
+        await maybeConfirmRide();
     });
+}
+
+async function maybeConfirmRide() {
+    if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) return;
+
+    const requestId = ++confirmRideRequestId;
+    clearTimeout(confirmRideTimer);
+    confirmRideTimer = setTimeout(async () => {
+        if (requestId !== confirmRideRequestId) return;
+        await confirmRide();
+    }, 200);
 }
 
 async function confirmRide() {
@@ -146,14 +161,20 @@ async function confirmRide() {
         return;
     }
 
-    if (selectedBoardingStation === selectedAlightingStation) {
+    const boardingStation = selectedBoardingStation;
+    const trainNumber = selectedTrain;
+    const alightingStation = selectedAlightingStation;
+
+    if (boardingStation === alightingStation) {
         ui.setRideResult('乗車駅と降車駅が同じです。別の駅を選択してください。');
         return;
     }
 
-    const timetable = await api.getTrain(selectedTrain);
-    const boardIndex = timetable.stops.findIndex(stop => stop.station === selectedBoardingStation);
-    const alightIndex = timetable.stops.findIndex(stop => stop.station === selectedAlightingStation);
+    const timetable = await api.getTrain(trainNumber);
+    if (boardingStation !== selectedBoardingStation || trainNumber !== selectedTrain || alightingStation !== selectedAlightingStation) return;
+
+    const boardIndex = timetable.stops.findIndex(stop => stop.station === boardingStation);
+    const alightIndex = timetable.stops.findIndex(stop => stop.station === alightingStation);
 
     if (boardIndex === -1 || alightIndex === -1 || alightIndex <= boardIndex) {
         ui.setRideResult('選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。');
@@ -164,10 +185,10 @@ async function confirmRide() {
     const alightingTime = timetable.stops[alightIndex].arrivalTime || timetable.stops[alightIndex].departureTime || '不明';
 
     ui.setRideDetails({
-        boardingStation: stationNameById(selectedBoardingStation),
-        trainNumber: selectedTrain,
+        boardingStation: stationNameById(boardingStation),
+        trainNumber,
         boardingTime,
-        alightingStation: stationNameById(selectedAlightingStation),
+        alightingStation: stationNameById(alightingStation),
         alightingTime
     });
 }
@@ -192,7 +213,7 @@ ui.onRailwayChange(async () => {
     // 日にちによってカレンダーを自動選択
     let dateType = calendar.getCurrentCalendarType();
     let index = matchIndexFromCalendars(dateType, calendars);
-    ui.selectCalendar(index);
+    ui.selectCalendar(index + 1);
 
     console.log(dateType);
     console.log("selected: " + calendars[index].id + ", index: " + index);
