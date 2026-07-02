@@ -1,58 +1,45 @@
 import * as api from './api.js';
 import * as ui from './ui.js';
 import * as pi from './pi.js';
-import * as calendar from './calendar.js';
 
+let boardingStations = [];
 let selectedBoardingStation = null;
 let selectedTrain = null;
 let selectedAlightingStation = null;
 let currentStations = [];
-let confirmRideRequestId = 0;
-let confirmRideTimer = null;
 
-function normalizeLocalizedItem(item) {
-    let escapeHtml = (value) => {
-        return String(value).replace(/[&<>"']/g, (ch) => ({
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;'
-        }[ch]));
-    }
 
-    if (typeof item === 'string') {
-        const safe = escapeHtml(item);
-        return { id: safe, nameJa: safe };
-    }
-
-    const id = item?.id ?? '';
-    const nameJa = item?.nameJa ?? item?.id ?? '';
-
-    return {
-        id: escapeHtml(id),
-        nameJa: escapeHtml(nameJa)
-    };
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
 }
 
-// @brief 手動でカレンダー名をローカライズする
-// @returns { id, nameJa } 
-function localizeCalendar(calendarID) {
-    let localizeCalendarID = (id) => {
-        const prefix = 'odpt.Calendar:';
-        switch(id) {
-            case `${prefix}Weekday`: return '平日';
-            case `${prefix}Saturday`: return '土曜';
-            case `${prefix}Holiday`: return '日曜';
-            case `${prefix}SaturdayHoliday`: return '土曜/日曜';
-            default: return id;
-        }
-    };
+function normalizeLocalizedItem(item) {
+  if (typeof item === 'string') {
+    const safe = escapeHtml(item);
+    return { id: safe, nameJa: safe };
+  }
 
-    return {
-        id: calendarID,
-        nameJa: localizeCalendarID(calendarID)
-    };
+  const id = item?.id ?? '';
+  const nameJa = item?.nameJa ?? item?.id ?? '';
+
+  return {
+    id: escapeHtml(id),
+    nameJa: escapeHtml(nameJa)
+  };
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`${res.status} ${res.statusText}`);
+  }
+  return res.json();
 }
 
 async function updateStatus() {
@@ -71,13 +58,7 @@ async function loadRailways() {
 async function loadCalendars() {
     const { railway } = ui.getSelectedConditions();
     if (!railway) return;
-    let calendars = (await api.getCalendars(railway))
-        .map(localizeCalendar)
-        .map(normalizeLocalizedItem);
-
-    console.log(calendars);
-    ui.setCalendars(calendars);
-    return calendars;
+    ui.setCalendars((await api.getCalendars(railway)).map(normalizeLocalizedItem));
 }
 
 async function loadDirections() {
@@ -86,9 +67,10 @@ async function loadDirections() {
     ui.setDirections((await api.getDirections(railway, calendar)).map(normalizeLocalizedItem));
 }
 
+
 function stationNameById(stationId) {
-    const station = currentStations.find(s => s.id === stationId);
-    return station ? station.nameJa : stationId;
+  const station = currentStations.find(s => s.id === stationId);
+  return station ? station.nameJa : stationId;
 }
 
 async function loadStations() {
@@ -108,19 +90,19 @@ async function loadStations() {
 
     ui.renderStepControls({
         stations: currentStations,
+        destination,
         onBoardingStationChange: async station => {
             selectedBoardingStation = station;
             selectedTrain = null;
             await loadTrainsForBoardingStation();
-            ui.autoSelectTrain();
         },
-        onAlightingStationChange: async station => {
+        onAlightingStationChange: station => {
             selectedAlightingStation = station;
-            await maybeConfirmRide();
-        }
+        },
+        onConfirmRide: confirmRide
     });
 
-    ui.appendDebug({ currentStations, destination });
+    ui.setDebug({ currentStations, destination });
 }
 
 async function loadTrainsForBoardingStation() {
@@ -133,23 +115,13 @@ async function loadTrainsForBoardingStation() {
         return;
     }
 
+
+
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
-    ui.setBoardingTrains(trains, async trainNumber => {
+    ui.setBoardingTrains(trains, trainNumber => {
         selectedTrain = trainNumber;
-        await maybeConfirmRide();
     });
-}
-
-async function maybeConfirmRide() {
-    if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) return;
-
-    const requestId = ++confirmRideRequestId;
-    clearTimeout(confirmRideTimer);
-    confirmRideTimer = setTimeout(async () => {
-        if (requestId !== confirmRideRequestId) return;
-        await confirmRide();
-    }, 200);
 }
 
 async function confirmRide() {
@@ -158,20 +130,14 @@ async function confirmRide() {
         return;
     }
 
-    const boardingStation = selectedBoardingStation;
-    const trainNumber = selectedTrain;
-    const alightingStation = selectedAlightingStation;
-
-    if (boardingStation === alightingStation) {
+    if (selectedBoardingStation === selectedAlightingStation) {
         ui.setRideResult('乗車駅と降車駅が同じです。別の駅を選択してください。');
         return;
     }
 
-    const timetable = await api.getTrain(trainNumber);
-    if (boardingStation !== selectedBoardingStation || trainNumber !== selectedTrain || alightingStation !== selectedAlightingStation) return;
-
-    const boardIndex = timetable.stops.findIndex(stop => stop.station === boardingStation);
-    const alightIndex = timetable.stops.findIndex(stop => stop.station === alightingStation);
+    const timetable = await api.getTrain(selectedTrain);
+    const boardIndex = timetable.stops.findIndex(stop => stop.station === selectedBoardingStation);
+    const alightIndex = timetable.stops.findIndex(stop => stop.station === selectedAlightingStation);
 
     if (boardIndex === -1 || alightIndex === -1 || alightIndex <= boardIndex) {
         ui.setRideResult('選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。');
@@ -182,41 +148,20 @@ async function confirmRide() {
     const alightingTime = timetable.stops[alightIndex].arrivalTime || timetable.stops[alightIndex].departureTime || '不明';
 
     ui.setRideDetails({
-        boardingStation: stationNameById(boardingStation),
-        trainNumber,
+        boardingStation: stationNameById(selectedBoardingStation),
+        trainNumber: selectedTrain,
         boardingTime,
-        alightingStation: stationNameById(alightingStation),
-        alightingTime,
-        onSendRide: () => onSendRide(boardingTime, alightingTime)
+        alightingStation: stationNameById(selectedAlightingStation),
+        alightingTime
     });
-}
-
-function matchIndexFromCalendars(dateType, calendars) {
-    for (const [i, calendar] of calendars.entries()) {
-        if (calendar.id.includes(dateType)) return i;
-    }
-    throw new Error("unrecognized calendar");
 }
 
 ui.onRailwayChange(async () => {
     ui.resetCalendars();
     ui.resetDirections();
-    const { railway } = ui.getSelectedConditions();
-    ui.setConditionControlsVisible(Boolean(railway));
-    if (!railway) return;
-
-    let calendars = await loadCalendars();
-    console.log(JSON.stringify(calendars));
-
-    // 日にちによってカレンダーを自動選択
-    let dateType = calendar.getCurrentCalendarType();
-    let index = matchIndexFromCalendars(dateType, calendars);
-    ui.selectCalendar(index + 1);
-
-    console.log(dateType);
-    console.log("selected: " + calendars[index].id + ", index: " + index);
+    await loadCalendars();
 });
-;
+
 ui.onCalendarChange(async () => {
     await loadDirections();
 });
@@ -232,38 +177,14 @@ ui.onLoadStationsClick(async () => {
     }
 });
 
-async function onSendRide(boardingTime, alightingTime) {
-    const DateOf = (hhmm) => {
-        const now = new Date();
-
-        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-
-        const yyyy = jst.getUTCFullYear();
-        const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
-        const dd = String(jst.getUTCDate()).padStart(2, "0");
-
-        return new Date(`${yyyy}-${mm}-${dd}T${hhmm}:00+09:00`);
-    };
-
-    pi.sendMessage({
-        type: "pi.setRideTime",
-        content: {
-            boardingTime: DateOf(boardingTime),
-            alightingTime: DateOf(alightingTime),
-        }
-    })
-    ui.appendStatus("乗車時間を発信しました。")
-}
-
 async function main() {
     await updateStatus();
     ui.resetCalendars();
     ui.resetDirections();
-    ui.setConditionControlsVisible(false);
     await loadRailways();
 
     await pi.connect((msg) => {
-        ui.appendDebug("[relay server receive]" + msg.data);
+        ui.setDebug("[relay server receive]" + msg.data);
     });
     ui.appendStatus("web socketリレーサービスに接続しました。");
 }
