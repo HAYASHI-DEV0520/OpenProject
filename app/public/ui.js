@@ -2,6 +2,7 @@ const elements = {
     status: document.getElementById('status'),
     statusLog: document.getElementById('statusLog'),
     railway: document.getElementById('railway'),
+    conditionControls: document.getElementById('conditionControls'),
     calendar: document.getElementById('calendar'),
     direction: document.getElementById('direction'),
     loadStations: document.getElementById('loadStations'),
@@ -44,6 +45,11 @@ class LogBuffer {
 }
 
 const statusLog = new LogBuffer(10);
+const debugLog = new LogBuffer(10);
+
+function formatDebugData(data) {
+    return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
 
 function setSelectOptions(select, placeholder, values, toID, toLabel) {
     select.replaceChildren();
@@ -53,7 +59,6 @@ function setSelectOptions(select, placeholder, values, toID, toLabel) {
     } else {
         values.forEach(value => select.append(new Option(toLabel(value), toID(value))));
     }
-    
 }
 
 export function getSelectedConditions() {
@@ -68,6 +73,7 @@ export function appendStatus(message) {
     statusLog.push(message);
     elements.statusLog.innerHTML = statusLog
         .toArray()
+        .reverse()
         .map(log => `<div>- ${log}</div>`)
         .join("");
     elements.status.textContent = message;
@@ -81,8 +87,17 @@ export function setCalendars(calendars) {
     setSelectOptions(elements.calendar, 'カレンダーを選択', calendars);
 }
 
+export function selectCalendar(index) {
+    elements.calendar.selectedIndex = index;
+    elements.calendar.dispatchEvent(new Event("change"));
+}
+
 export function resetCalendars() {
     setSelectOptions(elements.calendar, 'カレンダーを選択', []);
+}
+
+export function setConditionControlsVisible(visible) {
+    elements.conditionControls.hidden = !visible;
 }
 
 export function setDirections(directions) {
@@ -104,15 +119,20 @@ export function clearStepControls() {
     elements.stepControls.replaceChildren();
 }
 
-export function setDebug(data) {
-    elements.debug.textContent = JSON.stringify(data, null, 2);
+export function appendDebug(data) {
+    debugLog.push(formatDebugData(data));
+    elements.debug.textContent = debugLog
+        .toArray()
+        .reverse()
+        .map(log => `- ${log}`)
+        .join('\n');
 }
 
 export function setLoadStationsDisabled(disabled) {
     elements.loadStations.disabled = disabled;
 }
 
-export function renderStepControls({ stations, destination, onBoardingStationChange, onAlightingStationChange, onConfirmRide }) {
+export function renderStepControls({ stations, onBoardingStationChange, onAlightingStationChange }) {
     elements.stepControls.innerHTML = `
 <div class="row">
     <div>
@@ -120,22 +140,20 @@ export function renderStepControls({ stations, destination, onBoardingStationCha
         <select id="boardingStation"></select>
     </div>
     <div>
-        <label for="trainByTime">乗車時間で列車を選択</label>
-        <select id="trainByTime"></select>
-    </div>
-    <div>
         <label for="alightingStation">降車駅</label>
         <select id="alightingStation"></select>
     </div>
+    <div>
+        <label for="trainByTime">乗車時間で列車を選択</label>
+        <select id="trainByTime"></select>
+    </div>
 </div>
-<button id="confirmRide">乗車列車を確定</button>
 <div id="rideResult"></div>
 `;
 
     const boardingStation = document.getElementById('boardingStation');
     const trainByTime = document.getElementById('trainByTime');
     const alightingStation = document.getElementById('alightingStation');
-    const confirmRide = document.getElementById('confirmRide');
 
     setSelectOptions(boardingStation, '乗車駅を選択', stations);
     setSelectOptions(trainByTime, '列車を選択', []);
@@ -143,7 +161,6 @@ export function renderStepControls({ stations, destination, onBoardingStationCha
 
     boardingStation.addEventListener('change', event => onBoardingStationChange(event.target.value));
     alightingStation.addEventListener('change', event => onAlightingStationChange(event.target.value));
-    confirmRide.addEventListener('click', () => onConfirmRide(destination));
 }
 
 export function setBoardingTrains(trains, onTrainChange) {
@@ -160,6 +177,37 @@ export function setBoardingTrains(trains, onTrainChange) {
         }
     );
     trainSelect.onchange = event => onTrainChange(event.target.value);
+}
+
+export function autoSelectTrain() {
+    const trainSelect = document.getElementById('trainByTime');
+    if (!trainSelect) return;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    [...trainSelect.options].forEach((option, index) => {
+        if (!option.value) return;
+
+        const time = option.textContent.split(' - ')[0];
+        const match = time.match(/^(\d{1,2}):(\d{2})/);
+        if (!match) return;
+
+        const trainMinutes = Number(match[1]) * 60 + Number(match[2]);
+        const distance = Math.abs(trainMinutes - currentMinutes);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+        }
+    });
+
+    if (closestIndex === -1) return;
+
+    trainSelect.selectedIndex = closestIndex;
+    trainSelect.dispatchEvent(new Event('change'));
 }
 
 export function setBoardingTrainsLoading() {
@@ -179,7 +227,14 @@ export function setRideResult(message) {
     }
 }
 
-export function setRideDetails({ boardingStation, trainNumber, boardingTime, alightingStation, alightingTime }) {
+export function setRideDetails({
+    boardingStation,
+    trainNumber,
+    boardingTime,
+    alightingStation,
+    alightingTime,
+    onSendRide,
+}) {
     const rideResult = document.getElementById('rideResult');
     if (!rideResult) return;
 
@@ -199,6 +254,14 @@ export function setRideDetails({ boardingStation, trainNumber, boardingTime, ali
     const estimatedTime = document.createElement('h1');
     estimatedTime.textContent = `推定降車時間: ${alightingTime}`;
     rideResult.append(estimatedTime);
+
+    const sendRide = document.createElement('button');
+    sendRide.type = 'button';
+    sendRide.textContent = '発信';
+    if (onSendRide) {
+        sendRide.addEventListener('click', onSendRide);
+    }
+    rideResult.append(sendRide);
 }
 
 export function onRailwayChange(handler) {
