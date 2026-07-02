@@ -86,8 +86,9 @@ export function setCalendars(calendars) {
     setSelectOptions(elements.calendar, 'カレンダーを選択', calendars);
 }
 
+// calendars配列のindexから選択
 export function selectCalendar(index) {
-    elements.calendar.selectedIndex = index;
+    elements.calendar.selectedIndex = index + 1;
 }
 
 export function resetCalendars() {

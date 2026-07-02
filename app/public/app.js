@@ -189,7 +189,7 @@ ui.onRailwayChange(async () => {
     ui.selectCalendar(index);
 
     console.log(dateType);
-    console.log("selected: " + calendars[index].id);
+    console.log("selected: " + calendars[index].id + ", index: " + index);
 });
 ;
 ui.onCalendarChange(async () => {
