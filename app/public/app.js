@@ -1,6 +1,7 @@
 import * as api from './api.js';
 import * as ui from './ui.js';
 import * as pi from './pi.js';
+import * as calendar from './calendar.js';
 
 let boardingStations = [];
 let selectedBoardingStation = null;
@@ -33,14 +34,6 @@ function normalizeLocalizedItem(item) {
     };
 }
 
-async function fetchJson(url) {
-    const res = await fetch(url);
-    if (!res.ok) {
-        throw new Error(`${res.status} ${res.statusText}`);
-    }
-    return res.json();
-}
-
 async function updateStatus() {
     try {
         const data = await api.getStatus();
@@ -57,7 +50,9 @@ async function loadRailways() {
 async function loadCalendars() {
     const { railway } = ui.getSelectedConditions();
     if (!railway) return;
-    ui.setCalendars((await api.getCalendars(railway)).map(normalizeLocalizedItem));
+    let calendars = (await api.getCalendars(railway)).map(normalizeLocalizedItem);
+    ui.setCalendars(calendars);
+    return calendars;
 }
 
 async function loadDirections() {
@@ -66,10 +61,9 @@ async function loadDirections() {
     ui.setDirections((await api.getDirections(railway, calendar)).map(normalizeLocalizedItem));
 }
 
-
 function stationNameById(stationId) {
-  const station = currentStations.find(s => s.id === stationId);
-  return station ? station.nameJa : stationId;
+    const station = currentStations.find(s => s.id === stationId);
+    return station ? station.nameJa : stationId;
 }
 
 async function loadStations() {
@@ -101,7 +95,7 @@ async function loadStations() {
         onConfirmRide: confirmRide
     });
 
-    ui.setDebug({ currentStations, destination });
+    ui.appendDebug({ currentStations, destination });
 }
 
 async function loadTrainsForBoardingStation() {
@@ -156,9 +150,14 @@ async function confirmRide() {
 ui.onRailwayChange(async () => {
     ui.resetCalendars();
     ui.resetDirections();
-    await loadCalendars();
-});
+    let calendars = await loadCalendars();
+    ui.appendDebug(JSON.stringify(calendars));
 
+    // 日にちによってカレンダーを選択
+    let dateType = calendar.getCurrentCalendarType();
+    ui.appendDebug(dateType);
+});
+;
 ui.onCalendarChange(async () => {
     await loadDirections();
 });
@@ -181,11 +180,9 @@ async function main() {
     await loadRailways();
 
     await pi.connect((msg) => {
-        ui.setDebug("[relay server receive]" + msg.data);
+        ui.appendDebug("[relay server receive]" + msg.data);
     });
     ui.appendStatus("web socketリレーサービスに接続しました。");
-
-
 }
 
 window.addEventListener("load", main);

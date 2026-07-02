@@ -44,6 +44,11 @@ class LogBuffer {
 }
 
 const statusLog = new LogBuffer(10);
+const debugLog = new LogBuffer(10);
+
+function formatDebugData(data) {
+    return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+}
 
 function setSelectOptions(select, placeholder, values, toID, toLabel) {
     select.replaceChildren();
@@ -53,7 +58,6 @@ function setSelectOptions(select, placeholder, values, toID, toLabel) {
     } else {
         values.forEach(value => select.append(new Option(toLabel(value), toID(value))));
     }
-    
 }
 
 export function getSelectedConditions() {
@@ -68,6 +72,7 @@ export function appendStatus(message) {
     statusLog.push(message);
     elements.statusLog.innerHTML = statusLog
         .toArray()
+        .reverse()
         .map(log => `<div>- ${log}</div>`)
         .join("");
     elements.status.textContent = message;
@@ -104,8 +109,13 @@ export function clearStepControls() {
     elements.stepControls.replaceChildren();
 }
 
-export function setDebug(data) {
-    elements.debug.textContent = JSON.stringify(data, null, 2);
+export function appendDebug(data) {
+    debugLog.push(formatDebugData(data));
+    elements.debug.textContent = debugLog
+        .toArray()
+        .reverse()
+        .map(log => `- ${log}`)
+        .join('\n');
 }
 
 export function setLoadStationsDisabled(disabled) {
