@@ -34,6 +34,10 @@ function normalizeLocalizedItem(item) {
     };
 }
 
+function localizeCalendar(calendar) {
+    
+}
+
 async function updateStatus() {
     try {
         const data = await api.getStatus();
@@ -147,15 +151,26 @@ async function confirmRide() {
     });
 }
 
+function matchIndexFromCalendarType(dateType, calendars) {
+    for (const [i, calendar] of calendars.entries()) {
+        if (calendar.id.includes(dateType)) return i;
+    }
+    throw new Error("calendar not found");
+}
+
 ui.onRailwayChange(async () => {
     ui.resetCalendars();
     ui.resetDirections();
     let calendars = await loadCalendars();
-    ui.appendDebug(JSON.stringify(calendars));
+    console.log(JSON.stringify(calendars));
 
     // 日にちによってカレンダーを選択
     let dateType = calendar.getCurrentCalendarType();
-    ui.appendDebug(dateType);
+    let index = matchIndexFromCalendarType(dateType, calendars);
+    ui.selectCalendar(index);
+
+    console.log(dateType);
+    console.log("selected: " + calendars[index].id);
 });
 ;
 ui.onCalendarChange(async () => {
