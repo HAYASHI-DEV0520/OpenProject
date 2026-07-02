@@ -34,7 +34,8 @@ function normalizeLocalizedItem(item) {
     };
 }
 
-// 手動でローカライズ　マッチしてない場合は元のIDのまま
+// 手動でローカライズし、{id, nameJa}にする
+// マッチしてない場合は元のIDのまま
 function localizeCalendar(calendarID) {
     let localizeCalendarID = (id) => {
         const prefix = 'odpt.Calendar:';
@@ -183,7 +184,7 @@ ui.onRailwayChange(async () => {
     let calendars = await loadCalendars();
     console.log(JSON.stringify(calendars));
 
-    // 日にちによってカレンダーを選択
+    // 日にちによってカレンダーを自動選択
     let dateType = calendar.getCurrentCalendarType();
     let index = matchIndexFromCalendars(dateType, calendars);
     ui.selectCalendar(index);
