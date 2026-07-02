@@ -1,6 +1,6 @@
 import {RelayServer} from "https://www.chirimen.org/remote-connection/js/beta/RelayServer.js";
 
-const CHANNEL_NAME = "op2026";
+const CHANNEL_NAME = "op2026-TTE";
 
 let channel;
 

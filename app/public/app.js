@@ -234,7 +234,7 @@ ui.onLoadStationsClick(async () => {
 });
 
 async function onSendRide() {
-
+    pi.sendMessage()
 }
 
 async function main() {
