@@ -178,6 +178,37 @@ export function setBoardingTrains(trains, onTrainChange) {
     trainSelect.onchange = event => onTrainChange(event.target.value);
 }
 
+export function autoSelectTrain() {
+    const trainSelect = document.getElementById('trainByTime');
+    if (!trainSelect) return;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+
+    [...trainSelect.options].forEach((option, index) => {
+        if (!option.value) return;
+
+        const time = option.textContent.split(' - ')[0];
+        const match = time.match(/^(\d{1,2}):(\d{2})/);
+        if (!match) return;
+
+        const trainMinutes = Number(match[1]) * 60 + Number(match[2]);
+        const distance = Math.abs(trainMinutes - currentMinutes);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = index;
+        }
+    });
+
+    if (closestIndex === -1) return;
+
+    trainSelect.selectedIndex = closestIndex;
+    trainSelect.dispatchEvent(new Event('change'));
+}
+
 export function setBoardingTrainsLoading() {
     const trainSelect = document.getElementById('trainByTime');
     if (trainSelect) {

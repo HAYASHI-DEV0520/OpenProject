@@ -72,7 +72,7 @@ function getJapanHolidayKeys(year) {
     return holidays;
 }
 
-// JAPAN_TIME_ZONEから現在日にちによって'Weekday' | 'Saturday' | 'Holiday'を返す
+/* JAPAN_TIME_ZONEから現在日にちによって'Weekday' | 'Saturday' | 'Holiday'を返す */
 export function getCurrentCalendarType(date = new Date()) {
     const parts = getJapanDateParts(date);
     const dateKey = toDateKey(Number(parts.year), Number(parts.month), Number(parts.day));
