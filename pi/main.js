@@ -62,7 +62,7 @@ async function handleButtonPress(ev) {
             longPressTimerId = null;  
         }  
 
-        //const pressDuration = Date.now() - buttonPressStartTime;  
+        const pressDuration = Date.now() - buttonPressStartTime;  
 
         // 短押し（長押しでない）の場合のみ処理  
         // if (pressDuration < LONG_PRESS_DURATION) {  
@@ -85,9 +85,8 @@ async function startNewTimer(delay_seconds) {
     timerId = setTimeout(async () => {  
         isTimerRunning = false;  
         isLit = true;  
-        if (!dryRun) console.log("タイマー終了(降車時間)：LED点灯シーケンス開始");  
-        else console.log("タイマー終了(降車時間)");
-        if (!dryRun) await startLightSequence();  
+        console.log("タイマー終了：LED点灯シーケンス開始");  
+        await startLightSequence();  
     }, delay_seconds * 1000);  
 }
 
@@ -163,8 +162,8 @@ async function connect() {
         if (msg === null) return;
 
         let data = msg.data;
+        console.log(data);
 
-        console.log(`[receive]: ${data}`);
         if (typeof msg === "object" 
             && "type" in data
             && "content" in data
@@ -178,7 +177,7 @@ function onMessageObject(msgData) {
     switch (type) {
         case "setRideTime": {
             const { boardingTime, alightingTime } = msgData.content;
-            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            onSetRideTime(boardingTime, alightingTime);
             return;
         }
     }
@@ -213,19 +212,17 @@ async function main() {
         dryRun = true;
     }
 
-    if (!dryRun) {
-        // I2C初期化（Neopixel用）  
-        const i2cAccess = await requestI2CAccess();  
-        const port = i2cAccess.ports.get(1);  
-        npix = new NPIX(port, 0x41);  
-        await npix.init(NEOPIXEL_COUNT);  
-
-        // GPIO初期化（ボタン用）  
-        const gpioAccess = await requestGPIOAccess();  
-        const buttonPort = gpioAccess.ports.get(5);  
-        await buttonPort.export("in");  
-        buttonPort.onchange = handleButtonPress;  
-    }
+    // // I2C初期化（Neopixel用）  
+    // const i2cAccess = await requestI2CAccess();  
+    // const port = i2cAccess.ports.get(1);  
+    // npix = new NPIX(port, 0x41);  
+    // await npix.init(NEOPIXEL_COUNT);  
+    //
+    // // GPIO初期化（ボタン用）  
+    // const gpioAccess = await requestGPIOAccess();  
+    // const buttonPort = gpioAccess.ports.get(5);  
+    // await buttonPort.export("in");  
+    // buttonPort.onchange = handleButtonPress;  
 
     // channelに接続
     connect();

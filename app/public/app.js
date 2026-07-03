@@ -135,10 +135,18 @@ async function loadTrainsForBoardingStation() {
 
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
+
     ui.setBoardingTrains(trains, async trainNumber => {
         selectedTrain = trainNumber;
         await maybeConfirmRide();
     });
+
+    console.log("[load trains]");
+    console.log(selectedBoardingStation);
+    console.log(railway);
+    console.log(calendar);
+    console.log(direction);
+    console.log(trains);
 }
 
 async function maybeConfirmRide() {
@@ -266,6 +274,7 @@ async function main() {
         ui.appendDebug("[relay server receive]" + msg.data);
     });
     ui.appendStatus("web socketリレーサービスに接続しました。");
+    ui.appendStatus("newver");
 }
 
 window.addEventListener("load", main);
