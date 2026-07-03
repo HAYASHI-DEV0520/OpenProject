@@ -526,24 +526,37 @@ impl TimetableService {
                 .unwrap_or_default();
 
             for (index, stop) in timetable.train_timetable_object.iter().enumerate() {
-                if let (Some(station), Some(arrival_time)) =
-                    (&stop.arrival_station, &stop.arrival_time)
-                {
-                    station_map
-                        .entry(station.clone())
-                        .or_default()
-                        .push(ArrivalRecord {
-                            railway: timetable.railway.clone(),
-                            calendar: timetable.calendar.clone(),
-                            direction: timetable.rail_direction.clone(),
-                            train_number: timetable.train_number.clone(),
-                            destination: destination.clone(),
-                            arrival_time: arrival_time.clone(),
-                            stop_index: index,
-                            railway_name_ja: self.get_railway_name_ja(&timetable.railway),
-                            destination_name_ja: self.get_station_name_ja(&destination),
-                        });
-                }
+                let (station, arrival_time) =
+                    if let (Some(station), Some(arrival_time)) =
+                        (&stop.arrival_station, &stop.arrival_time)
+                    {
+                        (station, arrival_time)
+                    } else if stop.arrival_station.is_none() {
+                        if let (Some(station), Some(departure_time)) =
+                            (&stop.departure_station, &stop.departure_time)
+                        {
+                            (station, departure_time)
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    };
+
+                station_map
+                    .entry(station.clone())
+                    .or_default()
+                    .push(ArrivalRecord {
+                        railway: timetable.railway.clone(),
+                        calendar: timetable.calendar.clone(),
+                        direction: timetable.rail_direction.clone(),
+                        train_number: timetable.train_number.clone(),
+                        destination: destination.clone(),
+                        arrival_time: arrival_time.clone(),
+                        stop_index: index,
+                        railway_name_ja: self.get_railway_name_ja(&timetable.railway),
+                        destination_name_ja: self.get_station_name_ja(&destination),
+                    });
             }
         }
 
@@ -688,6 +701,17 @@ mod tests {
         assert_eq!(trains[0].train_number, "726T");
         assert_eq!(trains[0].arrival_time, "07:10");
         assert_eq!(trains[0].destination_name_ja, "西馬込");
+
+        let trains_at_origin = service.get_trains_arriving_at_station(
+            "odpt.Station:Toei.Asakusa.Sengakuji",
+            Some("odpt.Railway:Toei.Asakusa"),
+            Some("odpt.Calendar:Weekday"),
+            Some("odpt.RailDirection:Southbound"),
+        );
+        assert_eq!(trains_at_origin.len(), 2);
+        assert!(trains_at_origin.iter().all(|t| t.arrival_time == "07:00"));
+        assert!(trains_at_origin.iter().any(|t| t.train_number == "726T"));
+        assert!(trains_at_origin.iter().any(|t| t.train_number == "730T"));
 
         let stations = service.get_stations(
             "odpt.Railway:Toei.Asakusa",
