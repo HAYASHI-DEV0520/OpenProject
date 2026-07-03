@@ -43,8 +43,8 @@ function localizeCalendar(calendarID) {
         switch(id) {
             case `${prefix}Weekday`: return '平日';
             case `${prefix}Saturday`: return '土曜';
-            case `${prefix}Holiday`: return '日曜';
-            case `${prefix}SaturdayHoliday`: return '土曜/日曜';
+            case `${prefix}Holiday`: return '休日';
+            case `${prefix}SaturdayHoliday`: return '土曜/休日';
             default: return id;
         }
     };
