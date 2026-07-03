@@ -8,12 +8,13 @@ use reqwest::{Client, Url};
 use serde::{Deserialize, Serialize};
 
 const TIMETABLE_API_BASE: &str = "https://api.odpt.org/api/v4/odpt:TrainTimetable";
-const DEFAULT_RAILWAYS: [&str; 5] = [
+const DEFAULT_RAILWAYS: [&str; 6] = [
     "odpt.Railway:Toei.Arakawa",
     "odpt.Railway:Toei.Asakusa",
     "odpt.Railway:Toei.Mita",
     "odpt.Railway:Toei.Shinjuku",
     "odpt.Railway:Toei.NipporiToneri",
+    "odpt.Railway:Toei.Oedo"
 ];
 
 #[derive(Clone)]
