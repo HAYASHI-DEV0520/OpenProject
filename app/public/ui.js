@@ -248,7 +248,9 @@ export function autoSelectTrainByDate() {
         if (!match) return;
 
         const trainMinutes = Number(match[1]) * 60 + Number(match[2]);
-        const distance = Math.abs(trainMinutes - currentMinutes);
+        if (trainMinutes < currentMinutes) return;
+
+        const distance = trainMinutes - currentMinutes;
 
         if (distance < closestDistance) {
             closestDistance = distance;
