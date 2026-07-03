@@ -274,7 +274,6 @@ async function main() {
         ui.appendDebug("[relay server receive]" + msg.data);
     });
     ui.appendStatus("web socketリレーサービスに接続しました。");
-    ui.appendStatus("newver");
 }
 
 window.addEventListener("load", main);
