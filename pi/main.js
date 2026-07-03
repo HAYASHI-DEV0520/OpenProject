@@ -62,7 +62,7 @@ async function handleButtonPress(ev) {
             longPressTimerId = null;  
         }  
 
-        const pressDuration = Date.now() - buttonPressStartTime;  
+        //const pressDuration = Date.now() - buttonPressStartTime;  
 
         // 短押し（長押しでない）の場合のみ処理  
         // if (pressDuration < LONG_PRESS_DURATION) {  
@@ -85,7 +85,8 @@ async function startNewTimer(delay_seconds) {
     timerId = setTimeout(async () => {  
         isTimerRunning = false;  
         isLit = true;  
-        console.log("タイマー終了：LED点灯シーケンス開始");  
+        if (!dryRun) console.log("タイマー終了(降車時間)：LED点灯シーケンス開始");  
+        else console.log("タイマー終了(降車時間)");
         if (!dryRun) await startLightSequence();  
     }, delay_seconds * 1000);  
 }
@@ -163,7 +164,7 @@ async function connect() {
 
         let data = msg.data;
 
-        console.log("[receive]: data");
+        console.log(`[receive]: ${data}`);
         if (typeof msg === "object" 
             && "type" in data
             && "content" in data
