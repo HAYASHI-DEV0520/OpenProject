@@ -65,9 +65,9 @@ async function handleButtonPress(ev) {
         const pressDuration = Date.now() - buttonPressStartTime;  
 
         // 短押し（長押しでない）の場合のみ処理  
-        // if (pressDuration < LONG_PRESS_DURATION) {  
-        //     await startNewTimer(3);  
-        // }  
+        if (pressDuration < LONG_PRESS_DURATION) {  
+            await startNewTimer(3);  
+        }  
     }  
 }  
 
