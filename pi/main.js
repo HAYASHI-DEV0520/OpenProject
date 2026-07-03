@@ -86,7 +86,7 @@ async function startNewTimer(delay_seconds) {
         isTimerRunning = false;  
         isLit = true;  
         console.log("タイマー終了：LED点灯シーケンス開始");  
-        await startLightSequence();  
+        if (!dryRun) await startLightSequence();  
     }, delay_seconds * 1000);  
 }
 
@@ -162,8 +162,8 @@ async function connect() {
         if (msg === null) return;
 
         let data = msg.data;
-        console.log(data);
 
+        console.log("[receive]: data");
         if (typeof data === "object" 
             && "type" in data
             && "content" in data
@@ -177,7 +177,7 @@ function onMessageObject(msgData) {
     switch (type) {
         case "setRideTime": {
             const { boardingTime, alightingTime } = msgData.content;
-            onSetRideTime(boardingTime, alightingTime);
+            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
             return;
         }
     }
@@ -212,17 +212,19 @@ async function main() {
         dryRun = true;
     }
 
-    // // I2C初期化（Neopixel用）  
-    // const i2cAccess = await requestI2CAccess();  
-    // const port = i2cAccess.ports.get(1);  
-    // npix = new NPIX(port, 0x41);  
-    // await npix.init(NEOPIXEL_COUNT);  
-    //
-    // // GPIO初期化（ボタン用）  
-    // const gpioAccess = await requestGPIOAccess();  
-    // const buttonPort = gpioAccess.ports.get(5);  
-    // await buttonPort.export("in");  
-    // buttonPort.onchange = handleButtonPress;  
+    if (!dryRun) {
+        // I2C初期化（Neopixel用）  
+        const i2cAccess = await requestI2CAccess();  
+        const port = i2cAccess.ports.get(1);  
+        npix = new NPIX(port, 0x41);  
+        await npix.init(NEOPIXEL_COUNT);  
+
+        // GPIO初期化（ボタン用）  
+        const gpioAccess = await requestGPIOAccess();  
+        const buttonPort = gpioAccess.ports.get(5);  
+        await buttonPort.export("in");  
+        buttonPort.onchange = handleButtonPress;  
+    }
 
     // channelに接続
     connect();
