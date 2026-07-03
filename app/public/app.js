@@ -199,6 +199,7 @@ async function maybeConfirmRide() {
 }
 
 async function confirmRide() {
+    ui.clearRideDetails();
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) {
         ui.setRideResult('乗車駅、列車、降車駅をすべて選択してください。');
         return null;

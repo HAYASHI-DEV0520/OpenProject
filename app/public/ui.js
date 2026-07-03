@@ -271,6 +271,12 @@ export function setRideResult(message) {
     }
 }
 
+export function clearRideDetails() {
+    const rideResult = document.getElementById('rideResult');
+    if(!rideResult) return;
+    rideResult.replaceChildren();
+}
+
 export function setRideDetails({
     boardingStation,
     trainNumber,
