@@ -8,8 +8,7 @@ const elements = {
     direction: document.getElementById('direction'),
     loadStations: document.getElementById('loadStations'),
     result: document.getElementById('result'),
-    stepControls: document.getElementById('stepControls'),
-    debug: document.getElementById('debug')
+    stepControls: document.getElementById('stepControls')
 };
 
 class LogBuffer {
@@ -168,14 +167,6 @@ export function clearStepControls() {
     elements.stepControls.replaceChildren();
 }
 
-export function appendDebug(data) {
-    debugLog.push(formatDebugData(data));
-    elements.debug.textContent = debugLog
-        .toArray()
-        .reverse()
-        .map(log => `[${new Date().toLocaleTimeString()}] ${log}`)
-        .join('\n');
-}
 
 export function setLoadStationsDisabled(disabled) {
     elements.loadStations.disabled = disabled;
@@ -208,7 +199,15 @@ export function renderStepControls({ stations, onBoardingStationChange, onAlight
     setSelectOptions(trainByTime, '列車を選択', []);
     setSelectOptions(alightingStation, '降車駅を選択', stations);
 
-    boardingStation.addEventListener('change', event => onBoardingStationChange(event.target.value));
+    boardingStation.addEventListener('change', event => {
+        const selectedId = event.target.value;
+        const boardingIndex = stations.findIndex(s => s.id === selectedId);
+        const availableStations = boardingIndex >= 0
+            ? stations.slice(boardingIndex + 1)
+            : stations;
+        setSelectOptions(alightingStation, '降車駅を選択', availableStations);
+        onBoardingStationChange(selectedId);
+    });
     alightingStation.addEventListener('change', event => onAlightingStationChange(event.target.value));
 }
 
