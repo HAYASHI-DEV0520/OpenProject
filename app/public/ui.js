@@ -8,8 +8,7 @@ const elements = {
     direction: document.getElementById('direction'),
     loadStations: document.getElementById('loadStations'),
     result: document.getElementById('result'),
-    stepControls: document.getElementById('stepControls'),
-    debug: document.getElementById('debug')
+    stepControls: document.getElementById('stepControls')
 };
 
 class LogBuffer {
@@ -168,14 +167,6 @@ export function clearStepControls() {
     elements.stepControls.replaceChildren();
 }
 
-export function appendDebug(data) {
-    debugLog.push(formatDebugData(data));
-    elements.debug.textContent = debugLog
-        .toArray()
-        .reverse()
-        .map(log => `[${new Date().toLocaleTimeString()}] ${log}`)
-        .join('\n');
-}
 
 export function setLoadStationsDisabled(disabled) {
     elements.loadStations.disabled = disabled;

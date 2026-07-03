@@ -119,8 +119,6 @@ async function loadStations() {
             await maybeConfirmRide();
         }
     });
-
-    ui.appendDebug({ currentStations, destination });
 }
 
 async function loadTrainsForBoardingStation() {
