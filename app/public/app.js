@@ -112,7 +112,7 @@ async function loadStations() {
             selectedBoardingStation = station;
             selectedTrain = null;
             await loadTrainsForBoardingStation();
-            ui.autoSelectTrain();
+            ui.autoSelectTrainByDate();
         },
         onAlightingStationChange: async station => {
             selectedAlightingStation = station;
@@ -135,10 +135,18 @@ async function loadTrainsForBoardingStation() {
 
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
+
     ui.setBoardingTrains(trains, async trainNumber => {
         selectedTrain = trainNumber;
         await maybeConfirmRide();
     });
+
+    console.log("[load trains]");
+    console.log(selectedBoardingStation);
+    console.log(railway);
+    console.log(calendar);
+    console.log(direction);
+    console.log(trains);
 }
 
 async function maybeConfirmRide() {

@@ -164,7 +164,7 @@ async function connect() {
         let data = msg.data;
 
         console.log("[receive]: data");
-        if (typeof msg === "object" 
+        if (typeof data === "object" 
             && "type" in data
             && "content" in data
             && data.type.startsWith("pi."))

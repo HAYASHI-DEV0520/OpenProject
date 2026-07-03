@@ -1,5 +1,6 @@
 const elements = {
     status: document.getElementById('status'),
+    statusToast: document.getElementById('statusToast'),
     statusLog: document.getElementById('statusLog'),
     railway: document.getElementById('railway'),
     conditionControls: document.getElementById('conditionControls'),
@@ -46,12 +47,18 @@ class LogBuffer {
 
 const statusLog = new LogBuffer(10);
 const debugLog = new LogBuffer(10);
+let statusToastTimer = null;
 
 function formatDebugData(data) {
     return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 }
 
 function setSelectOptions(select, placeholder, values, toID, toLabel) {
+    if (select.dataset.autoSelectionBound !== 'true') {
+        select.addEventListener('change', clearAutoSelectionOnManualChange);
+        select.dataset.autoSelectionBound = 'true';
+    }
+    clearAutoSelection(select);
     select.replaceChildren();
     select.append(new Option(placeholder, ''));
     if(!toID){
@@ -59,6 +66,51 @@ function setSelectOptions(select, placeholder, values, toID, toLabel) {
     } else {
         values.forEach(value => select.append(new Option(toLabel(value), toID(value))));
     }
+}
+
+function clearAutoSelection(select) {
+    select.classList.remove('auto-selected');
+    [...select.options]
+        .filter(option => option.dataset.auto === 'true')
+        .forEach(option => option.remove());
+}
+
+function selectAutoOption(select, index) {
+    const selectedOption = select.options[index];
+    if (!selectedOption || !selectedOption.value) return false;
+
+    clearAutoSelection(select);
+
+    const autoOption = new Option(
+        `自動(${selectedOption.textContent})`,
+        selectedOption.value
+    );
+    autoOption.dataset.auto = 'true';
+    select.append(autoOption);
+    select.value = autoOption.value;
+    autoOption.selected = true;
+    select.classList.add('auto-selected');
+    select.dispatchEvent(new Event('change'));
+    return true;
+}
+
+function clearAutoSelectionOnManualChange(event) {
+    const selectedOption = event.target.selectedOptions[0];
+    if (selectedOption?.dataset.auto === 'true') return;
+    clearAutoSelection(event.target);
+}
+
+function showStatusToast(message) {
+    elements.statusToast.textContent = message;
+    elements.statusToast.classList.remove('is-visible');
+    clearTimeout(statusToastTimer);
+
+    requestAnimationFrame(() => {
+        elements.statusToast.classList.add('is-visible');
+        statusToastTimer = setTimeout(() => {
+            elements.statusToast.classList.remove('is-visible');
+        }, 2400);
+    });
 }
 
 export function getSelectedConditions() {
@@ -74,9 +126,10 @@ export function appendStatus(message) {
     elements.statusLog.innerHTML = statusLog
         .toArray()
         .reverse()
-        .map(log => `<div>- ${log}</div>`)
+        .map(log => `<div>[${new Date().toLocaleTimeString()}] ${log}</div>`)
         .join("");
     elements.status.textContent = message;
+    showStatusToast(message);
 }
 
 export function setRailways(railways) {
@@ -85,11 +138,6 @@ export function setRailways(railways) {
 
 export function setCalendars(calendars) {
     setSelectOptions(elements.calendar, 'カレンダーを選択', calendars);
-}
-
-export function selectCalendar(index) {
-    elements.calendar.selectedIndex = index;
-    elements.calendar.dispatchEvent(new Event("change"));
 }
 
 export function resetCalendars() {
@@ -124,7 +172,7 @@ export function appendDebug(data) {
     elements.debug.textContent = debugLog
         .toArray()
         .reverse()
-        .map(log => `- ${log}`)
+        .map(log => `[${new Date().toLocaleTimeString()}] ${log}`)
         .join('\n');
 }
 
@@ -179,7 +227,11 @@ export function setBoardingTrains(trains, onTrainChange) {
     trainSelect.onchange = event => onTrainChange(event.target.value);
 }
 
-export function autoSelectTrain() {
+export function selectCalendar(index) {
+    selectAutoOption(elements.calendar, index);
+}
+
+export function autoSelectTrainByDate() {
     const trainSelect = document.getElementById('trainByTime');
     if (!trainSelect) return;
 
@@ -196,7 +248,9 @@ export function autoSelectTrain() {
         if (!match) return;
 
         const trainMinutes = Number(match[1]) * 60 + Number(match[2]);
-        const distance = Math.abs(trainMinutes - currentMinutes);
+        if (trainMinutes < currentMinutes) return;
+
+        const distance = trainMinutes - currentMinutes;
 
         if (distance < closestDistance) {
             closestDistance = distance;
@@ -206,8 +260,7 @@ export function autoSelectTrain() {
 
     if (closestIndex === -1) return;
 
-    trainSelect.selectedIndex = closestIndex;
-    trainSelect.dispatchEvent(new Event('change'));
+    selectAutoOption(trainSelect, closestIndex);
 }
 
 export function setBoardingTrainsLoading() {
