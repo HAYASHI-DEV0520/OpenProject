@@ -297,7 +297,7 @@ async function onSendRide(boardingTime, alightingTime) {
             alightingTime: DateOf(alightingTime),
         }
     })
-    ui.appendStatus("乗車時間を発信しました。")
+    ui.appendStatus(`乗車時間(${boardingTime})と降車時間(${alightingTime})を発信しました。`);
 }
 
 ui.onCalendarChange(async () => {
@@ -316,7 +316,7 @@ ui.onLoadStationsClick(async () => {
 });
 
 pi.onGetRideTime(async () => {
-    console.log("receive request: getRideTime");
+    ui.appendStatus("乗車時間のリクエストを受け取りました。");
     if (!selectedBoardingStation || !selectedAlightingStation) {
         pi.sendMessage({
             type: "pi.getRideTimeError",
