@@ -112,7 +112,7 @@ async function loadStations() {
             selectedBoardingStation = station;
             selectedTrain = null;
             await loadTrainsForBoardingStation();
-            ui.autoSelectTrainByDate();
+            selectNearestFutureTrain();
         },
         onAlightingStationChange: async station => {
             selectedAlightingStation = station;
@@ -149,6 +149,49 @@ async function loadTrainsForBoardingStation() {
     console.log(trains);
 }
 
+function dateFromTrainByTime(train, baseDate = new Date()) {
+    const match = train.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return null;
+
+    const date = new Date(baseDate);
+    date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+    return date;
+}
+
+function getNearestFutureTrain() {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    let nearestTrain = null;
+    let nearestDate = null;
+    let nearestMinutes = null;
+
+    ui.getTrains().forEach(train => {
+        const trainDate = dateFromTrainByTime(train, now);
+        if (!trainDate) return;
+
+        const trainMinutes = trainDate.getHours() * 60 + trainDate.getMinutes();
+        if (trainMinutes < currentMinutes) return;
+
+        if (nearestMinutes === null || trainMinutes < nearestMinutes) {
+            nearestTrain = train;
+            nearestDate = trainDate;
+            nearestMinutes = trainMinutes;
+        }
+    });
+
+    if (!nearestTrain) return null;
+
+    return {
+        train: nearestTrain,
+        trainDate: nearestDate
+    };
+}
+
+function selectNearestFutureTrain() {
+    let nearestTrain = getNearestFutureTrain();
+    if (nearestTrain) ui.selectTrainByTime(nearestTrain.train);
+}
+
 async function maybeConfirmRide() {
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) return;
 
@@ -163,7 +206,7 @@ async function maybeConfirmRide() {
 async function confirmRide() {
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) {
         ui.setRideResult('乗車駅、列車、降車駅をすべて選択してください。');
-        return;
+        return null;
     }
 
     const boardingStation = selectedBoardingStation;
@@ -172,22 +215,26 @@ async function confirmRide() {
 
     if (boardingStation === alightingStation) {
         ui.setRideResult('乗車駅と降車駅が同じです。別の駅を選択してください。');
-        return;
+        return null;
     }
 
     const timetable = await api.getTrain(trainNumber);
-    if (boardingStation !== selectedBoardingStation || trainNumber !== selectedTrain || alightingStation !== selectedAlightingStation) return;
+    if (boardingStation !== selectedBoardingStation 
+        || trainNumber !== selectedTrain
+        || alightingStation !== selectedAlightingStation) return null;
 
     const boardIndex = timetable.stops.findIndex(stop => stop.station === boardingStation);
     const alightIndex = timetable.stops.findIndex(stop => stop.station === alightingStation);
 
     if (boardIndex === -1 || alightIndex === -1 || alightIndex <= boardIndex) {
         ui.setRideResult('選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。');
-        return;
+        return null;
     }
 
-    const boardingTime = timetable.stops[boardIndex].arrivalTime || timetable.stops[boardIndex].departureTime || '不明';
-    const alightingTime = timetable.stops[alightIndex].arrivalTime || timetable.stops[alightIndex].departureTime || '不明';
+    const boardingTime = timetable.stops[boardIndex].arrivalTime 
+        || timetable.stops[boardIndex].departureTime || '不明';
+    const alightingTime = timetable.stops[alightIndex].arrivalTime 
+        || timetable.stops[alightIndex].departureTime || '不明';
 
     ui.setRideDetails({
         boardingStation: stationNameById(boardingStation),
@@ -197,6 +244,11 @@ async function confirmRide() {
         alightingTime,
         onSendRide: () => onSendRide(boardingTime, alightingTime)
     });
+
+    return {
+        boardingTime,
+        alightingTime
+    }
 }
 
 function matchIndexFromCalendars(dateType, calendars) {
@@ -224,21 +276,6 @@ ui.onRailwayChange(async () => {
     console.log(dateType);
     console.log("selected: " + calendars[index].id + ", index: " + index);
 });
-;
-ui.onCalendarChange(async () => {
-    await loadDirections();
-});
-
-ui.onLoadStationsClick(async () => {
-    ui.setLoadStationsDisabled(true);
-    try {
-        await loadStations();
-    } catch (err) {
-        ui.setResult(`エラー: ${err.message}`);
-    } finally {
-        ui.setLoadStationsDisabled(false);
-    }
-});
 
 async function onSendRide(boardingTime, alightingTime) {
     const DateOf = (hhmm) => {
@@ -260,8 +297,47 @@ async function onSendRide(boardingTime, alightingTime) {
             alightingTime: DateOf(alightingTime),
         }
     })
-    ui.appendStatus("乗車時間を発信しました。")
+    ui.appendStatus(`乗車時間(${boardingTime})と降車時間(${alightingTime})を発信しました。`);
 }
+
+ui.onCalendarChange(async () => {
+    await loadDirections();
+});
+
+ui.onLoadStationsClick(async () => {
+    ui.setLoadStationsDisabled(true);
+    try {
+        await loadStations();
+    } catch (err) {
+        ui.setResult(`エラー: ${err.message}`);
+    } finally {
+        ui.setLoadStationsDisabled(false);
+    }
+});
+
+pi.onGetRideTime(async () => {
+    ui.appendStatus("乗車時間のリクエストを受け取りました。");
+    if (!selectedBoardingStation || !selectedAlightingStation) {
+        pi.sendMessage({
+            type: "pi.getRideTimeError",
+            content: "NotSelected"
+        });
+        console.log("onGetRideTime(): send error");
+        return;
+    }
+    selectNearestFutureTrain();
+
+    let result = await confirmRide();
+    if (result) {
+        await onSendRide(result.boardingTime, result.alightingTime);
+        console.log(`onGetRideTime(): send ride: ${result.boardingTime}, ${result.alightingTime}`);
+    } else {
+        pi.sendMessage({
+            type: "pi.getRideTimeError",
+            content: "TrainNotFound"
+        });
+    }
+})
 
 async function main() {
     await updateStatus();
@@ -270,9 +346,7 @@ async function main() {
     ui.setConditionControlsVisible(false);
     await loadRailways();
 
-    await pi.connect((msg) => {
-        ui.appendDebug("[relay server receive]" + msg.data);
-    });
+    await pi.connect();
     ui.appendStatus("web socketリレーサービスに接続しました。");
 }
 

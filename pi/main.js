@@ -66,7 +66,7 @@ async function handleButtonPress(ev) {
 
         // 短押し（長押しでない）の場合のみ処理  
         if (pressDuration < LONG_PRESS_DURATION) {  
-            await startNewTimer(3);  
+            sendRideRequest()
         }  
     }  
 }  
@@ -163,13 +163,23 @@ async function connect() {
 
         let data = msg.data;
 
-        console.log("[receive]: data");
+        console.log(`[receive]: ${JSON.stringify(data)}`);
         if (typeof data === "object" 
             && "type" in data
             && "content" in data
             && data.type.startsWith("pi."))
             onMessageObject(data); 
     }
+}
+
+function sendRideRequest() {
+    console.log("乗車リクエストを送信");
+    channel.send({
+        type: "pc.getRideTime",
+        content: {
+            currentTime: new Date().toISOString()
+        }
+    });
 }
 
 function onMessageObject(msgData) {
@@ -179,6 +189,16 @@ function onMessageObject(msgData) {
             const { boardingTime, alightingTime } = msgData.content;
             onSetRideTime(new Date(boardingTime), new Date(alightingTime));
             return;
+        }
+        case "getRideTimeError": {
+            switch(msgData.content) {
+                case "NotSelected": 
+                    console.log("エラー: 乗車駅または降車駅が選択されていません");
+                    return;
+                case "TrainNotFound":
+                    console.log("エラー: 選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。");
+                    return;
+            }
         }
     }
 }
@@ -208,9 +228,15 @@ async function onSetRideTime(boardingTime, alightingTime) {
 }
 
 async function main() {  
-    if (process.argv.includes("--dry-run")) {
+    let needsSendRideRequest = false;
+
+    if (process.argv.includes("--dry-run") || process.argv.includes("-d")) {
         dryRun = true;
+        if (process.argv.includes("--send-ride-request") || process.argv.includes("-s")) {
+            needsSendRideRequest = true;
+        }
     }
+    console.log(`[args]: ${dryRun ? "dry-run" : ""} ${needsSendRideRequest ? "send-ride-request" : ""}`);
 
     if (!dryRun) {
         // I2C初期化（Neopixel用）  
@@ -227,9 +253,13 @@ async function main() {
     }
 
     // channelに接続
-    connect();
+    await connect();
 
     console.log("初期化完了");  
+
+    if (needsSendRideRequest) {
+        sendRideRequest();
+    }
 }
 
 main();
