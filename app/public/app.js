@@ -319,8 +319,8 @@ pi.onGetRideTime(async () => {
     console.log("receive request: getRideTime");
     if (!selectedBoardingStation || !selectedAlightingStation) {
         pi.sendMessage({
-            type: 'pi.getRideTimeError',
-            content: {}
+            type: "pi.getRideTimeError",
+            content: "NotSelected"
         });
         console.log("onGetRideTime(): send error");
         return;
@@ -331,6 +331,11 @@ pi.onGetRideTime(async () => {
     if (result) {
         await onSendRide(result.boardingTime, result.alightingTime);
         console.log(`onGetRideTime(): send ride: ${result.boardingTime}, ${result.alightingTime}`);
+    } else {
+        pi.sendMessage({
+            type: "pi.getRideTimeError",
+            content: "TrainNotFound"
+        });
     }
 })
 

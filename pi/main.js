@@ -191,7 +191,14 @@ function onMessageObject(msgData) {
             return;
         }
         case "getRideTimeError": {
-            console.log("Error: 乗車駅または降車駅が未設定です")
+            switch(msgData.content) {
+                case "NotSelected": 
+                    console.log("エラー: 乗車駅または降車駅が選択されていません");
+                    return;
+                case "TrainNotFound":
+                    console.log("エラー: 選択した列車は乗車駅から降車駅へ向かいません。別の組み合わせを選択してください。");
+                    return;
+            }
         }
     }
 }

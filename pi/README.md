@@ -42,6 +42,11 @@ webページで乗車駅、降車駅が選択された状態で、現在時刻�
 - 返信: `pi.setRideTime` または `pi.getRideTimeError`
 
 ```js
+type: "pi.setRideTime",
 content: { currentTime } // ISO文字列
 ```
 
+```js
+type: "pi.getRideTimeError",
+content: { type: String }   // "NotSelected" | "TrainNotFound"
+```
