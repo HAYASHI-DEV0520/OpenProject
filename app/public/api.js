@@ -46,10 +46,10 @@ export function getTrains(station, railway, calendar, direction) {
     return fetchJson(buildUrl('/trains', { station, railway, calendar, direction }));
 }
 
-export function getTrain(trainNumber) {
-    return fetchJson(buildUrl('/train', { trainNumber }));
+export function getTrain(trainId) {
+    return fetchJson(buildUrl('/train', { trainId }));
 }
 
-export function getTrainArrival(trainNumber, station) {
-    return fetchJson(buildUrl('/trainArrival', { trainNumber, station }));
+export function getTrainArrival(trainId, station) {
+    return fetchJson(buildUrl('/trainArrival', { trainId, station }));
 }

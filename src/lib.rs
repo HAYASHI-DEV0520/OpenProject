@@ -42,6 +42,8 @@ struct Localization {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct TimetableRecord {
+    #[serde(rename = "@id")]
+    id: String,
     #[serde(rename = "odpt:railway")]
     railway: String,
     #[serde(rename = "odpt:calendar")]
@@ -109,6 +111,7 @@ pub struct ArrivalRecord {
     pub railway: String,
     pub calendar: String,
     pub direction: String,
+    pub train_id: String,
     pub train_number: String,
     pub destination: String,
     pub arrival_time: String,
@@ -341,24 +344,24 @@ impl TimetableService {
 
     pub fn get_train_arrival_time_at_station(
         &self,
-        train_number: &str,
+        train_id: &str,
         station: &str,
     ) -> Option<String> {
         let trains = self.get_trains_arriving_at_station(station, None, None, None);
         let Some(train) = trains
             .into_iter()
-            .find(|item| item.train_number == train_number)
+            .find(|item| item.train_id == train_id)
         else {
-            eprintln!("Train {train_number} does not arrive at {station}");
+            eprintln!("Train {train_id} does not arrive at {station}");
             return None;
         };
 
         Some(train.arrival_time)
     }
 
-    pub fn get_train_timetable(&self, train_number: &str) -> Option<TrainTimetableResponse> {
-        let Some(timetable) = self.indexed_data.train_map.get(train_number) else {
-            eprintln!("Train not found: {train_number}");
+    pub fn get_train_timetable(&self, train_id: &str) -> Option<TrainTimetableResponse> {
+        let Some(timetable) = self.indexed_data.train_map.get(train_id) else {
+            eprintln!("Train not found: {train_id}");
             return None;
         };
 
@@ -518,7 +521,7 @@ impl TimetableService {
                 .or_insert_with(HashSet::new)
                 .insert(timetable.rail_direction.clone());
 
-            train_map.insert(timetable.train_number.clone(), timetable.clone());
+            train_map.insert(timetable.id.clone(), timetable.clone());
 
             let destination = timetable
                 .destination_station
@@ -551,6 +554,7 @@ impl TimetableService {
                         railway: timetable.railway.clone(),
                         calendar: timetable.calendar.clone(),
                         direction: timetable.rail_direction.clone(),
+                        train_id: timetable.id.clone(),
                         train_number: timetable.train_number.clone(),
                         destination: destination.clone(),
                         arrival_time: arrival_time.clone(),
@@ -628,6 +632,7 @@ mod tests {
 
     fn sample_record(train_number: &str, arrival_time: &str) -> TimetableRecord {
         serde_json::from_value(json!({
+            "@id": format!("urn:ucode:{train_number}"),
             "odpt:railway": "odpt.Railway:Toei.Asakusa",
             "odpt:calendar": "odpt.Calendar:Weekday",
             "odpt:railDirection": "odpt.RailDirection:Southbound",
@@ -728,11 +733,11 @@ mod tests {
         );
 
         assert_eq!(
-            service.get_train_arrival_time_at_station("726T", "odpt.Station:Toei.Asakusa.Daimon"),
+            service.get_train_arrival_time_at_station("urn:ucode:726T", "odpt.Station:Toei.Asakusa.Daimon"),
             Some("07:10".to_string())
         );
 
-        let timetable = service.get_train_timetable("726T").expect("timetable");
+        let timetable = service.get_train_timetable("urn:ucode:726T").expect("timetable");
         assert_eq!(timetable.origin_station_name_ja, "泉岳寺");
         assert_eq!(timetable.destination_station_name_ja, "西馬込");
         assert_eq!(timetable.stops.len(), 2);

@@ -219,7 +219,7 @@ export function setBoardingTrains(trains, onTrainChange) {
         trainSelect,
         '列車を選択',
         trains,
-        train => train.trainNumber,
+        train => train.trainId,
         train => {
             return `${train.arrivalTime} - ${train.trainNumber}`;
         }

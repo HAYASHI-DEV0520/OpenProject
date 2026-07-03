@@ -125,8 +125,8 @@ async function loadTrainsForBoardingStation() {
     ui.setBoardingTrainsLoading();
 
     if (!selectedBoardingStation) {
-        ui.setBoardingTrains([], trainNumber => {
-            selectedTrain = trainNumber;
+        ui.setBoardingTrains([], trainId => {
+            selectedTrain = trainId;
         });
         return;
     }
@@ -134,8 +134,8 @@ async function loadTrainsForBoardingStation() {
     const { railway, calendar, direction } = ui.getSelectedConditions();
     const trains = await api.getTrains(selectedBoardingStation, railway, calendar, direction);
 
-    ui.setBoardingTrains(trains, async trainNumber => {
-        selectedTrain = trainNumber;
+    ui.setBoardingTrains(trains, async trainId => {
+        selectedTrain = trainId;
         await maybeConfirmRide();
     });
 
@@ -206,7 +206,7 @@ async function confirmRide() {
     }
 
     const boardingStation = selectedBoardingStation;
-    const trainNumber = selectedTrain;
+    const trainId = selectedTrain;
     const alightingStation = selectedAlightingStation;
 
     if (boardingStation === alightingStation) {
@@ -214,9 +214,9 @@ async function confirmRide() {
         return null;
     }
 
-    const timetable = await api.getTrain(trainNumber);
+    const timetable = await api.getTrain(trainId);
     if (boardingStation !== selectedBoardingStation 
-        || trainNumber !== selectedTrain
+        || trainId !== selectedTrain
         || alightingStation !== selectedAlightingStation) return null;
 
     const boardIndex = timetable.stops.findIndex(stop => stop.station === boardingStation);
@@ -234,7 +234,7 @@ async function confirmRide() {
 
     ui.setRideDetails({
         boardingStation: stationNameById(boardingStation),
-        trainNumber,
+        trainNumber: timetable.trainNumber,
         boardingTime,
         alightingStation: stationNameById(alightingStation),
         alightingTime,
