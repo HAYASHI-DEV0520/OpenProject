@@ -132,6 +132,7 @@ export function appendStatus(message) {
     showStatusToast(message);
 }
 
+
 export function setRailways(railways) {
     setSelectOptions(elements.railway, '線路を選択', railways);
 }
@@ -231,37 +232,28 @@ export function selectCalendar(index) {
     selectAutoOption(elements.calendar, index);
 }
 
-export function autoSelectTrainByDate() {
+export function getTrains() {
     const trainSelect = document.getElementById('trainByTime');
-    if (!trainSelect) return;
+    if (!trainSelect) return [];
 
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    let closestIndex = -1;
-    let closestDistance = Infinity;
+    return [...trainSelect.options]
+        .filter(option => option.value && option.dataset.auto !== 'true')
+        .map(option => option.textContent);
+}
 
-    [...trainSelect.options].forEach((option, index) => {
-        if (!option.value) return;
+export function selectTrainByTime(train) {
+    const trainSelect = document.getElementById('trainByTime');
+    if (!trainSelect) return false;
 
-        const time = option.textContent.split(' - ')[0];
-        const match = time.match(/^(\d{1,2}):(\d{2})/);
-        if (!match) return;
-
-        const trainMinutes = Number(match[1]) * 60 + Number(match[2]);
-        if (trainMinutes < currentMinutes) return;
-
-        const distance = trainMinutes - currentMinutes;
-
-        if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIndex = index;
-        }
+    const index = [...trainSelect.options].findIndex(option => {
+        return option.dataset.auto !== 'true' && option.textContent === train;
     });
 
-    if (closestIndex === -1) return;
+    if (index === -1) return false;
 
-    selectAutoOption(trainSelect, closestIndex);
+    return selectAutoOption(trainSelect, index);
 }
+
 
 export function setBoardingTrainsLoading() {
     const trainSelect = document.getElementById('trainByTime');
