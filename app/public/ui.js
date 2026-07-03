@@ -221,7 +221,7 @@ export function setBoardingTrains(trains, onTrainChange) {
         trains,
         train => train.trainId,
         train => {
-            return `${train.arrivalTime} - ${train.trainNumber}`;
+            return train.arrivalTime;
         }
     );
     trainSelect.onchange = event => onTrainChange(event.target.value);
