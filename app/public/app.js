@@ -196,11 +196,8 @@ async function maybeConfirmRide() {
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) return;
 
     const requestId = ++confirmRideRequestId;
-    clearTimeout(confirmRideTimer);
-    confirmRideTimer = setTimeout(async () => {
-        if (requestId !== confirmRideRequestId) return;
-        await confirmRide();
-    }, 200);
+    if (requestId !== confirmRideRequestId) return;
+    await confirmRide();
 }
 
 async function confirmRide() {

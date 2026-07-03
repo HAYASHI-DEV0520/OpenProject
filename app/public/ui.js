@@ -208,7 +208,15 @@ export function renderStepControls({ stations, onBoardingStationChange, onAlight
     setSelectOptions(trainByTime, '列車を選択', []);
     setSelectOptions(alightingStation, '降車駅を選択', stations);
 
-    boardingStation.addEventListener('change', event => onBoardingStationChange(event.target.value));
+    boardingStation.addEventListener('change', event => {
+        const selectedId = event.target.value;
+        const boardingIndex = stations.findIndex(s => s.id === selectedId);
+        const availableStations = boardingIndex >= 0
+            ? stations.slice(boardingIndex + 1)
+            : stations;
+        setSelectOptions(alightingStation, '降車駅を選択', availableStations);
+        onBoardingStationChange(selectedId);
+    });
     alightingStation.addEventListener('change', event => onAlightingStationChange(event.target.value));
 }
 
