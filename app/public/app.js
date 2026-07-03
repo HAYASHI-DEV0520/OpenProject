@@ -112,7 +112,7 @@ async function loadStations() {
             selectedBoardingStation = station;
             selectedTrain = null;
             await loadTrainsForBoardingStation();
-            ui.autoSelectTrain();
+            ui.autoSelectTrainByDate();
         },
         onAlightingStationChange: async station => {
             selectedAlightingStation = station;
