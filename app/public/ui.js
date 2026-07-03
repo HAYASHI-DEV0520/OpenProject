@@ -126,7 +126,7 @@ export function appendStatus(message) {
     elements.statusLog.innerHTML = statusLog
         .toArray()
         .reverse()
-        .map(log => `<div>- ${log}</div>`)
+        .map(log => `<div>[${new Date().toLocaleTimeString()}] ${log}</div>`)
         .join("");
     elements.status.textContent = message;
     showStatusToast(message);
@@ -172,7 +172,7 @@ export function appendDebug(data) {
     elements.debug.textContent = debugLog
         .toArray()
         .reverse()
-        .map(log => `- ${log}`)
+        .map(log => `[${new Date().toLocaleTimeString()}] ${log}`)
         .join('\n');
 }
 
