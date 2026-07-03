@@ -11,6 +11,7 @@ node main.js [options...]
 
 - `--dry-run, -d`: LED ライト点滅なし、ボタンコントロールなし
 - `--send-ride-request, -s`: (`--dry-run`と一緒に使用)PCへ乗車時刻の取得の申請を自動で行います（ボタンを1回短く押すのと同じ)
+    - `relayServer`に接続成功した直後に、pc側に`getRideTime`を送信します。
 
 > [!NOTE]
 > argument parserは含んでいないので例えば`-d -s`を`-ds`に省略することはできません
