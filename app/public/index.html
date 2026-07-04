@@ -40,11 +40,6 @@
     <h1>タイマー設定</h1>
   </header>
   <main>
-    <div class="card">
-      <label for="alightingTimeOffsetMinutesInput">降車時間の</label>
-      <input id="alightingTimeOffsetMinutesInput" type="number" min="0" step="1" value="3" inputmode="numeric" />
-      <span>分前に光る</span>
-    </div>
 
     <div class="card">
       <h2>データソース</h2>
@@ -79,6 +74,12 @@
       <button id="loadStations">停車駅と列車を読み込む</button>
       <div id="stepControls"></div>
       <div id="result"></div>
+    </div>
+
+    <div class="card">
+      <label for="alightingTimeOffsetMinutesInput">降車時間の</label>
+      <input id="alightingTimeOffsetMinutesInput" type="number" min="0" step="1" value="3" inputmode="numeric" />
+      <span>分前に光る</span>
     </div>
 
   </main>
