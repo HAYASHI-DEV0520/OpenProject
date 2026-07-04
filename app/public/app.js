@@ -9,6 +9,7 @@ let selectedAlightingStation = null;
 let currentStations = [];
 let confirmRideRequestId = 0;
 let confirmRideTimer = null;
+let alightingTimeOffsetMinutes = -3;
 
 function normalizeLocalizedItem(item) {
     let escapeHtml = (value) => {
@@ -89,6 +90,17 @@ async function loadDirections() {
 function stationNameById(stationId) {
     const station = currentStations.find(s => s.id === stationId);
     return station ? station.nameJa : stationId;
+}
+
+function timeWithOffset(hhmm, offsetMinutes) {
+    const match = hhmm.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return '不明';
+
+    const totalMinutes = Number(match[1]) * 60 + Number(match[2]) + offsetMinutes;
+    const normalizedMinutes = ((totalMinutes % 1440) + 1440) % 1440;
+    const hours = String(Math.floor(normalizedMinutes / 60)).padStart(2, '0');
+    const minutes = String(normalizedMinutes % 60).padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
 async function loadStations() {
@@ -231,6 +243,7 @@ async function confirmRide() {
         || timetable.stops[boardIndex].departureTime || '不明';
     const alightingTime = timetable.stops[alightIndex].arrivalTime 
         || timetable.stops[alightIndex].departureTime || '不明';
+    const alarmTime = timeWithOffset(alightingTime, alightingTimeOffsetMinutes);
 
     ui.setRideDetails({
         boardingStation: stationNameById(boardingStation),
@@ -238,7 +251,8 @@ async function confirmRide() {
         boardingTime,
         alightingStation: stationNameById(alightingStation),
         alightingTime,
-        onSendRide: () => onSendRide(boardingTime, alightingTime)
+        alarmTime,
+        onSendRide: () => onSendRide(alarmTime)
     });
 
     return {
@@ -273,7 +287,7 @@ ui.onRailwayChange(async () => {
     console.log("selected: " + calendars[index].id + ", index: " + index);
 });
 
-async function onSendRide(boardingTime, alightingTime) {
+async function onSendRide(alarmTime) {
     const DateOf = (hhmm) => {
         const now = new Date();
 
@@ -289,12 +303,18 @@ async function onSendRide(boardingTime, alightingTime) {
     pi.sendMessage({
         type: "pi.setRideTime",
         content: {
-            boardingTime: DateOf(boardingTime),
-            alightingTime: DateOf(alightingTime),
+            alarmTime: DateOf(alarmTime),
         }
     })
-    ui.appendStatus(`乗車時間(${boardingTime})と降車時間(${alightingTime})を発信しました。`);
+    ui.appendStatus(`アラーム時間(${alarmTime})を発信しました。`);
 }
+
+ui.onAlightingTimeOffsetMinutesChange(async value => {
+    const minutesBefore = Number(value);
+    if (!Number.isFinite(minutesBefore)) return;
+    alightingTimeOffsetMinutes = -Math.abs(minutesBefore);
+    await maybeConfirmRide();
+});
 
 ui.onCalendarChange(async () => {
     await loadDirections();

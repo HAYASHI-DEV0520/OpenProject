@@ -32,7 +32,7 @@ typeの書式: `発信先.内容` 。 `pc.{content}` または `pi.{content}`
 乗車タイマーを設定
 
 ``` js
-content: { boardingTime, alightingTime } // ISO文字列を発送
+content: { alarmTime } // ISO文字列を発送
 ```
 
 #### `pc.getRideTime` 

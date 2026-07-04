@@ -186,8 +186,8 @@ function onMessageObject(msgData) {
     const type = msgData.type.slice(3);
     switch (type) {
         case "setRideTime": {
-            const { boardingTime, alightingTime } = msgData.content;
-            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            const { alarmTime } = msgData.content;
+            onSetRideTime(new Date(alarmTime));
             return;
         }
         case "getRideTimeError": {
@@ -208,23 +208,15 @@ function onMessageObject(msgData) {
 // ╚═════════════════════════════════════════════════════════╝
 
 
-async function onSetRideTime(boardingTime, alightingTime) {
-    if (boardingTime > alightingTime) 
-        throw new Error("onSetRideTime(): boardingTime > alightingTime");
-
+async function onSetRideTime(alarmTime) {
     let now = new Date();
 
-    if (now > alightingTime) {
+    if (now > alarmTime) {
         console.log("onSetRideTime(): もう降車時間を過ぎています");
         return;
     }
-    if (now < boardingTime) {
-        console.log(`onSetRideTime(): 乗車時間まで待機: ${(boardingTime - now) / 1000} 秒`);
-        await sleep(boardingTime - now);
-    }
-
     now = new Date();
-    await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
+    await startNewTimer(Math.max(0, (alarmTime - now)) / 1000);
 }
 
 async function main() {  

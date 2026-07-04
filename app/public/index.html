@@ -11,7 +11,7 @@
     h1, h2 { margin: 0 0 1rem; }
     .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.08); padding: 1rem; margin-bottom: 1rem; }
     label { display: block; margin: 0.75rem 0 0.25rem; }
-    select, button { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+    select, input, button { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; box-sizing: border-box; }
     select.auto-selected { border-color: #66c1e8; background: #f0f7fa; color: #075273; }
     button { margin-top: 1rem; background: #0a61d6; color: #fff; border: none; cursor: pointer; }
     button:disabled { background: #a5b4fc; cursor: not-allowed; }
@@ -40,6 +40,12 @@
     <h1>タイマー設定</h1>
   </header>
   <main>
+    <div class="card">
+      <label for="alightingTimeOffsetMinutesInput">降車時間の</label>
+      <input id="alightingTimeOffsetMinutesInput" type="number" min="0" step="1" value="3" inputmode="numeric" />
+      <span>分前に光る</span>
+    </div>
+
     <div class="card">
       <h2>データソース</h2>
       <p>ODPT API から都営地下鉄のダイヤを取得します。</p>
