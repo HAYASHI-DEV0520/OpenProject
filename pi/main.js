@@ -73,7 +73,11 @@ async function handleButtonPress(ev) {
 
         // 短押し（長押しでない）の場合のみ処理  
         if (pressDuration < LONG_PRESS_DURATION) {  
-            sendRideRequest()
+            if (isTimerRunning || waitingTimerID != null) {
+                console.log("リクエストが無効です。タイマーがすでに動いています");
+            } else {
+                sendRideRequest()
+            }
         }  
     }  
 }  
@@ -195,12 +199,12 @@ function sendRideRequest() {
     });
 }
 
-function onMessageObject(msgData) {
+async function onMessageObject(msgData) {
     const type = msgData.type.slice(3);
     switch (type) {
         case "setRideTime": {
             const { boardingTime, alightingTime } = msgData.content;
-            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            await onSetRideTime(new Date(boardingTime), new Date(alightingTime));
             return;
         }
         case "getRideTimeError": {
