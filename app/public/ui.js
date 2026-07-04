@@ -308,7 +308,7 @@ export function setRideDetails({
     rideResult.append(estimatedTime);
 
     const alarmTimeElement = document.createElement('h1');
-    alarmTimeElement.textContent = `目覚まし時間: ${alarmTime}`;
+    alarmTimeElement.textContent = `アラーム時間: ${alarmTime}`;
     rideResult.append(alarmTimeElement);
 
     const sendRide = document.createElement('button');

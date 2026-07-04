@@ -210,7 +210,20 @@ async function maybeConfirmRide() {
     await confirmRide();
 }
 
+function dateOf(hhmm) {
+    const now = new Date();
+
+    const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+
+    const yyyy = jst.getUTCFullYear();
+    const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(jst.getUTCDate()).padStart(2, "0");
+
+    return new Date(`${yyyy}-${mm}-${dd}T${hhmm}:00+09:00`);
+};
+
 async function confirmRide() {
+
     ui.clearRideDetails();
     if (!selectedBoardingStation || !selectedTrain || !selectedAlightingStation) {
         ui.setRideResult('乗車駅、列車、降車駅をすべて選択してください。');
@@ -243,7 +256,10 @@ async function confirmRide() {
         || timetable.stops[boardIndex].departureTime || '不明';
     const alightingTime = timetable.stops[alightIndex].arrivalTime 
         || timetable.stops[alightIndex].departureTime || '不明';
-    const alarmTime = timeWithOffset(alightingTime, alightingTimeOffsetMinutes);
+    let alarmTime = timeWithOffset(alightingTime, alightingTimeOffsetMinutes);
+
+    if (dateOf(alarmTime) < dateOf(boardingTime))
+        alarmTime = boardingTime;
 
     ui.setRideDetails({
         boardingStation: stationNameById(boardingStation),
@@ -256,8 +272,7 @@ async function confirmRide() {
     });
 
     return {
-        boardingTime,
-        alightingTime
+        alarmTime
     }
 }
 
@@ -288,22 +303,11 @@ ui.onRailwayChange(async () => {
 });
 
 async function onSendRide(alarmTime) {
-    const DateOf = (hhmm) => {
-        const now = new Date();
-
-        const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-
-        const yyyy = jst.getUTCFullYear();
-        const mm = String(jst.getUTCMonth() + 1).padStart(2, "0");
-        const dd = String(jst.getUTCDate()).padStart(2, "0");
-
-        return new Date(`${yyyy}-${mm}-${dd}T${hhmm}:00+09:00`);
-    };
 
     pi.sendMessage({
         type: "pi.setRideTime",
         content: {
-            alarmTime: DateOf(alarmTime),
+            alarmTime: dateOf(alarmTime),
         }
     })
     ui.appendStatus(`アラーム時間(${alarmTime})を発信しました。`);
@@ -343,10 +347,9 @@ pi.onGetRideTime(async () => {
     }
     selectNearestFutureTrain();
 
-    let result = await confirmRide();
-    if (result) {
-        await onSendRide(result.boardingTime, result.alightingTime);
-        console.log(`onGetRideTime(): send ride: ${result.boardingTime}, ${result.alightingTime}`);
+    let { alarmTime } = await confirmRide();
+    if ( alarmTime ) {
+        await onSendRide(alarmTime);
     } else {
         pi.sendMessage({
             type: "pi.getRideTimeError",
