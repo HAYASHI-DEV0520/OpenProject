@@ -53,12 +53,12 @@ async function handleButtonPress(ev) {
                 clearTimeout(timerId);  
                 isTimerRunning = false;  
                 console.log("タイマー停止完了");  
-                await blinkOnce(128, 60, 20);
+                await blinkOnce(64, 30, 10);
             }  else if (waitingTimerID != null) {
                 clearTimeout(waitingTimerID);
                 waitingTimerID = null;
                 console.log("待機取り消し");  
-                await blinkOnce(128, 60, 20);
+                await blinkOnce(64, 30, 10);
             }
         }, LONG_PRESS_DURATION);  
 
@@ -75,7 +75,7 @@ async function handleButtonPress(ev) {
         if (pressDuration < LONG_PRESS_DURATION) {  
             if (isTimerRunning || waitingTimerID != null || isLit) {
                 console.log("リクエストが無効です。タイマーがすでに動いています");
-                blinkOnce(128, 0, 0);
+                blinkOnce(64, 0, 0);
             } else {
                 sendRideRequest()
             }
@@ -194,7 +194,7 @@ async function connect() {
 
 function sendRideRequest() {
     console.log("乗車リクエストを送信");
-    blinkOnce(0, 128, 0);
+    blinkOnce(0, 64, 0);
     channel.send({
         type: "pc.getRideTime",
         content: {
