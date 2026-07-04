@@ -92,7 +92,7 @@ async function startNewTimer(delay_seconds) {
 
     // タイマー開始（LEDはまだ点灯しない）  
     isTimerRunning = true;  
-    console.log("タイマー開始");  
+    console.log(`タイマー開始: ${delay_seconds}s`);  
 
     timerId = setTimeout(async () => {  
         isTimerRunning = false;  
@@ -229,20 +229,18 @@ async function onMessageObject(msgData) {
 // ╚═════════════════════════════════════════════════════════╝
 
 
-async function onSetRideTime(boardingTime, alightingTime) {
+async function onSetRideTime(alarmTime) {
     clearTimeout(waitingTimerID);
     waitingTimerID = null;
-    if (boardingTime > alightingTime) 
-        throw new Error("onSetRideTime(): boardingTime > alightingTime");
+
+    console.log(`タイマーを設定: ${alarmTime.toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo"
+    })}`)
 
     let now = new Date();
-
-    if (now > alarmTime) {
-        console.log("onSetRideTime(): もう降車時間を過ぎています");
-        return;
-    }
-    now = new Date();
-    await startNewTimer(Math.max(0, (alarmTime - now)) / 1000);
+    if (now < alarmTime) 
+        await startNewTimer(Math.max(0, (alarmTime - now)) / 1000);
+    else await startNewTimer(0);
 }
 
 async function main() {  
