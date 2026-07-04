@@ -92,7 +92,7 @@ async function startNewTimer(delay_seconds) {
 
     // タイマー開始（LEDはまだ点灯しない）  
     isTimerRunning = true;  
-    console.log("タイマー開始");  
+    console.log(`タイマー開始: ${delay_seconds}s`);  
 
     timerId = setTimeout(async () => {  
         isTimerRunning = false;  
@@ -207,8 +207,8 @@ async function onMessageObject(msgData) {
     const type = msgData.type.slice(3);
     switch (type) {
         case "setRideTime": {
-            const { boardingTime, alightingTime } = msgData.content;
-            await onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            const { alarmTime } = msgData.content;
+            onSetRideTime(new Date(alarmTime));
             return;
         }
         case "getRideTimeError": {
@@ -229,30 +229,18 @@ async function onMessageObject(msgData) {
 // ╚═════════════════════════════════════════════════════════╝
 
 
-async function onSetRideTime(boardingTime, alightingTime) {
+async function onSetRideTime(alarmTime) {
     clearTimeout(waitingTimerID);
     waitingTimerID = null;
-    if (boardingTime > alightingTime) 
-        throw new Error("onSetRideTime(): boardingTime > alightingTime");
+
+    console.log(`タイマーを設定: ${alarmTime.toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo"
+    })}`)
 
     let now = new Date();
-
-    if (now > alightingTime) {
-        console.log("onSetRideTime(): もう降車時間を過ぎています");
-        return;
-    }
-    if (now < boardingTime) {
-        console.log(`onSetRideTime(): 乗車時間まで待機: ${(boardingTime - now) / 1000} 秒`);
-        waitingTimerID = setTimeout(async () => {
-            now = new Date();
-            await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
-            waitingTimerID = null;
-        }, boardingTime - now);
-    } else  {
-        now = new Date();
-        await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
-    }
-
+    if (now < alarmTime) 
+        await startNewTimer(Math.max(0, (alarmTime - now)) / 1000);
+    else await startNewTimer(0);
 }
 
 async function main() {  

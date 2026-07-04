@@ -2,6 +2,7 @@ const elements = {
     status: document.getElementById('status'),
     statusToast: document.getElementById('statusToast'),
     statusLog: document.getElementById('statusLog'),
+    alightingTimeOffsetMinutesInput: document.getElementById('alightingTimeOffsetMinutesInput'),
     railway: document.getElementById('railway'),
     conditionControls: document.getElementById('conditionControls'),
     calendar: document.getElementById('calendar'),
@@ -283,6 +284,7 @@ export function setRideDetails({
     boardingTime,
     alightingStation,
     alightingTime,
+    alarmTime,
     onSendRide,
 }) {
     const rideResult = document.getElementById('rideResult');
@@ -305,6 +307,10 @@ export function setRideDetails({
     estimatedTime.textContent = `推定降車時間: ${alightingTime}`;
     rideResult.append(estimatedTime);
 
+    const alarmTimeElement = document.createElement('h1');
+    alarmTimeElement.textContent = `アラーム時間: ${alarmTime}`;
+    rideResult.append(alarmTimeElement);
+
     const sendRide = document.createElement('button');
     sendRide.type = 'button';
     sendRide.textContent = '発信';
@@ -324,4 +330,10 @@ export function onCalendarChange(handler) {
 
 export function onLoadStationsClick(handler) {
     elements.loadStations.addEventListener('click', handler);
+}
+
+export function onAlightingTimeOffsetMinutesChange(handler) {
+    elements.alightingTimeOffsetMinutesInput.addEventListener('input', event => {
+        handler(event.target.value);
+    });
 }
