@@ -22,6 +22,7 @@ let timerId = null;           // タイマーID（キャンセル用）
 let longPressTimerId = null;  // 長押し検出用タイマーID  
 let buttonPressStartTime = 0; // ボタン押下開始時刻  
 let blinkIntervalId = null;   // 点滅用インターバルID  
+let waitingTimerID = null;
 
 let dryRun = false;
 
@@ -52,7 +53,10 @@ async function handleButtonPress(ev) {
                 clearTimeout(timerId);  
                 isTimerRunning = false;  
                 console.log("タイマー停止完了");  
-            }  
+            }  else if (waitingTimerID != null) {
+                clearTimeout(waitingTimerID);
+                waitingTimerID = null;
+            }
         }, LONG_PRESS_DURATION);  
 
     } else {  
@@ -220,11 +224,13 @@ async function onSetRideTime(boardingTime, alightingTime) {
     }
     if (now < boardingTime) {
         console.log(`onSetRideTime(): 乗車時間まで待機: ${(boardingTime - now) / 1000} 秒`);
-        await sleep(boardingTime - now);
+        waitingTimerID = setTimeout(async () => {
+            now = new Date();
+            await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
+            waitingTimerID = null;
+        }, boardingTime - now);
     }
 
-    now = new Date();
-    await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
 }
 
 async function main() {  
