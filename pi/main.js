@@ -53,10 +53,12 @@ async function handleButtonPress(ev) {
                 clearTimeout(timerId);  
                 isTimerRunning = false;  
                 console.log("タイマー停止完了");  
+                timerStopBlink();
             }  else if (waitingTimerID != null) {
                 clearTimeout(waitingTimerID);
                 waitingTimerID = null;
                 console.log("待機取り消し");  
+                timerStopBlink();
             }
         }, LONG_PRESS_DURATION);  
 
@@ -152,6 +154,12 @@ async function stopLight() {
         blinkIntervalId = null;  
     }  
     await npix.setGlobal(0, 0, 0);  
+}
+
+async function timerStopBlink() {
+    await npix.setGlobal(128, 60, 20);
+    await sleep(500);
+    await npix.setGlobal(0, 0, 0);
 }
 
 // ╔═════════════════════════════════════════════════════════╗
