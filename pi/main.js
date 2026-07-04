@@ -73,7 +73,7 @@ async function handleButtonPress(ev) {
 
         // 短押し（長押しでない）の場合のみ処理  
         if (pressDuration < LONG_PRESS_DURATION) {  
-            if (isTimerRunning || waitingTimerID != null) {
+            if (isTimerRunning || waitingTimerID != null || isLit) {
                 console.log("リクエストが無効です。タイマーがすでに動いています");
             } else {
                 sendRideRequest()
@@ -185,7 +185,9 @@ async function connect() {
             && "type" in data
             && "content" in data
             && data.type.startsWith("pi."))
-            onMessageObject(data); 
+            onMessageObject(data).catch(
+                err => console.error("Error: ", err)
+            )
     }
 }
 
