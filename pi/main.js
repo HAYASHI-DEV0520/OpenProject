@@ -93,13 +93,13 @@ async function startNewTimer(delay_seconds) {
 async function startLightSequence() {  
     // フェーズ1: 30秒で (0,0,0) → (255,120,20)  
     console.log("フェーズ1: フェード開始");  
-    await fadeColor(0, 0, 0, 255, 120, 20, FADE_DURATION);  
+    await fadeColor(0, 0, 0, 128, 60, 20, FADE_DURATION);  
 
     if (!isLit) return; // 消灯された場合は中断  
 
     // フェーズ2: 30秒で (255,120,20) → (255,255,255)  
     console.log("フェーズ2: フェード開始");  
-    await fadeColor(255, 120, 20, 255, 255, 255, FADE_DURATION);  
+    await fadeColor(128, 60, 10, 255, 255, 255, FADE_DURATION);  
 
     if (!isLit) return; // 消灯された場合は中断  
 
