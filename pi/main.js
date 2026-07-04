@@ -53,12 +53,12 @@ async function handleButtonPress(ev) {
                 clearTimeout(timerId);  
                 isTimerRunning = false;  
                 console.log("タイマー停止完了");  
-                timerStopBlink();
+                await timerStopBlink();
             }  else if (waitingTimerID != null) {
                 clearTimeout(waitingTimerID);
                 waitingTimerID = null;
                 console.log("待機取り消し");  
-                timerStopBlink();
+                await timerStopBlink();
             }
         }, LONG_PRESS_DURATION);  
 
@@ -100,7 +100,7 @@ async function startNewTimer(delay_seconds) {
 async function startLightSequence() {  
     // フェーズ1: 30秒で (0,0,0) → (255,120,20)  
     console.log("フェーズ1: フェード開始");  
-    await fadeColor(0, 0, 0, 128, 60, 20, FADE_DURATION);  
+    await fadeColor(0, 0, 0, 128, 60, 10, FADE_DURATION);  
 
     if (!isLit) return; // 消灯された場合は中断  
 
@@ -222,6 +222,8 @@ function onMessageObject(msgData) {
 
 
 async function onSetRideTime(boardingTime, alightingTime) {
+    clearTimeout(waitingTimerID);
+    waitingTimerID = null;
     if (boardingTime > alightingTime) 
         throw new Error("onSetRideTime(): boardingTime > alightingTime");
 
