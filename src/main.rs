@@ -203,7 +203,7 @@ async fn train(
     Json(
         state.timetable.get_train_timetable(
             params
-                .get("trainNumber")
+                .get("trainId")
                 .map(String::as_str)
                 .unwrap_or_default(),
         ),
@@ -217,7 +217,7 @@ async fn train_arrival(
     Json(
         state.timetable.get_train_arrival_time_at_station(
             params
-                .get("trainNumber")
+                .get("trainId")
                 .map(String::as_str)
                 .unwrap_or_default(),
             params

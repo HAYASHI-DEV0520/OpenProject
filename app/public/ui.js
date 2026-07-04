@@ -219,9 +219,9 @@ export function setBoardingTrains(trains, onTrainChange) {
         trainSelect,
         '列車を選択',
         trains,
-        train => train.trainNumber,
+        train => train.trainId,
         train => {
-            return `${train.arrivalTime} - ${train.trainNumber}`;
+            return train.arrivalTime;
         }
     );
     trainSelect.onchange = event => onTrainChange(event.target.value);
@@ -269,6 +269,12 @@ export function setRideResult(message) {
         p.textContent = message;
         rideResult.append(p);
     }
+}
+
+export function clearRideDetails() {
+    const rideResult = document.getElementById('rideResult');
+    if(!rideResult) return;
+    rideResult.replaceChildren();
 }
 
 export function setRideDetails({
