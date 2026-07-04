@@ -22,6 +22,7 @@ let timerId = null;           // タイマーID（キャンセル用）
 let longPressTimerId = null;  // 長押し検出用タイマーID  
 let buttonPressStartTime = 0; // ボタン押下開始時刻  
 let blinkIntervalId = null;   // 点滅用インターバルID  
+let waitingTimerID = null;
 
 let dryRun = false;
 
@@ -52,7 +53,13 @@ async function handleButtonPress(ev) {
                 clearTimeout(timerId);  
                 isTimerRunning = false;  
                 console.log("タイマー停止完了");  
-            }  
+                await blinkOnce(64, 30, 10);
+            }  else if (waitingTimerID != null) {
+                clearTimeout(waitingTimerID);
+                waitingTimerID = null;
+                console.log("待機取り消し");  
+                await blinkOnce(64, 30, 10);
+            }
         }, LONG_PRESS_DURATION);  
 
     } else {  
@@ -66,7 +73,12 @@ async function handleButtonPress(ev) {
 
         // 短押し（長押しでない）の場合のみ処理  
         if (pressDuration < LONG_PRESS_DURATION) {  
-            sendRideRequest()
+            if (isTimerRunning || waitingTimerID != null || isLit) {
+                console.log("リクエストが無効です。タイマーがすでに動いています");
+                blinkOnce(64, 0, 0);
+            } else {
+                sendRideRequest()
+            }
         }  
     }  
 }  
@@ -93,13 +105,13 @@ async function startNewTimer(delay_seconds) {
 async function startLightSequence() {  
     // フェーズ1: 30秒で (0,0,0) → (255,120,20)  
     console.log("フェーズ1: フェード開始");  
-    await fadeColor(0, 0, 0, 255, 120, 20, FADE_DURATION);  
+    await fadeColor(0, 0, 0, 128, 60, 10, FADE_DURATION);  
 
     if (!isLit) return; // 消灯された場合は中断  
 
     // フェーズ2: 30秒で (255,120,20) → (255,255,255)  
     console.log("フェーズ2: フェード開始");  
-    await fadeColor(255, 120, 20, 255, 255, 255, FADE_DURATION);  
+    await fadeColor(128, 60, 10, 255, 255, 255, FADE_DURATION);  
 
     if (!isLit) return; // 消灯された場合は中断  
 
@@ -149,6 +161,12 @@ async function stopLight() {
     await npix.setGlobal(0, 0, 0);  
 }
 
+async function blinkOnce(r, g, b) {
+    await npix.setGlobal(r, g, b);
+    await sleep(500);
+    await npix.setGlobal(0, 0, 0);
+}
+
 // ╔═════════════════════════════════════════════════════════╗
 // ║                       server通信                        ║
 // ╚═════════════════════════════════════════════════════════╝
@@ -168,12 +186,15 @@ async function connect() {
             && "type" in data
             && "content" in data
             && data.type.startsWith("pi."))
-            onMessageObject(data); 
+            onMessageObject(data).catch(
+                err => console.error("Error: ", err)
+            )
     }
 }
 
 function sendRideRequest() {
     console.log("乗車リクエストを送信");
+    blinkOnce(0, 64, 0);
     channel.send({
         type: "pc.getRideTime",
         content: {
@@ -182,12 +203,12 @@ function sendRideRequest() {
     });
 }
 
-function onMessageObject(msgData) {
+async function onMessageObject(msgData) {
     const type = msgData.type.slice(3);
     switch (type) {
         case "setRideTime": {
             const { boardingTime, alightingTime } = msgData.content;
-            onSetRideTime(new Date(boardingTime), new Date(alightingTime));
+            await onSetRideTime(new Date(boardingTime), new Date(alightingTime));
             return;
         }
         case "getRideTimeError": {
@@ -209,6 +230,8 @@ function onMessageObject(msgData) {
 
 
 async function onSetRideTime(boardingTime, alightingTime) {
+    clearTimeout(waitingTimerID);
+    waitingTimerID = null;
     if (boardingTime > alightingTime) 
         throw new Error("onSetRideTime(): boardingTime > alightingTime");
 
@@ -220,11 +243,16 @@ async function onSetRideTime(boardingTime, alightingTime) {
     }
     if (now < boardingTime) {
         console.log(`onSetRideTime(): 乗車時間まで待機: ${(boardingTime - now) / 1000} 秒`);
-        await sleep(boardingTime - now);
+        waitingTimerID = setTimeout(async () => {
+            now = new Date();
+            await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
+            waitingTimerID = null;
+        }, boardingTime - now);
+    } else  {
+        now = new Date();
+        await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
     }
 
-    now = new Date();
-    await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
 }
 
 async function main() {  
