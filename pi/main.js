@@ -238,6 +238,9 @@ async function onSetRideTime(boardingTime, alightingTime) {
             await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
             waitingTimerID = null;
         }, boardingTime - now);
+    } else  {
+        now = new Date();
+        await startNewTimer(Math.max(0, (alightingTime - now)) / 1000);
     }
 
 }
