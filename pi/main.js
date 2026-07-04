@@ -56,6 +56,7 @@ async function handleButtonPress(ev) {
             }  else if (waitingTimerID != null) {
                 clearTimeout(waitingTimerID);
                 waitingTimerID = null;
+                console.log("待機取り消し");  
             }
         }, LONG_PRESS_DURATION);  
 
